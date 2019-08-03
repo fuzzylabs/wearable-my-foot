@@ -1,0 +1,22 @@
+# Emacs
+*~
+
+# Virtualenv
+esp32/env
+
+# PlatformIO
+.pio
+
+# JVM
+*.iml
+.gradle
+.idea
+local.properties
+.externalNativeBuild
+android/build
+android/captures
+android/gradle
+android/gradlew
+android/gradlew.bat
+
+
