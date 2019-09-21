@@ -29,7 +29,7 @@ platformio run
 *Build and upload*
 
 ```
-platformio upload
+platformio run -t upload
 ```
 
 *Run the tests* - this builds a new image and uploads it so that tests are run on the device
