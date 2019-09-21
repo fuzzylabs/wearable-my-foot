@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "BluetoothSerial.h"
 
 #define ADC_RESOLUTION 4096
 
@@ -11,36 +12,47 @@ const int pressureSensors[] = {
   15, 2, 4
 };
 
-void getPressure(int adcReading) {
+BluetoothSerial SerialBT;
+
+float getPressure(int adcReading) {
   Serial.printf("ADC: %d\n", adcReading);
 
   const float v = VCC * adcReading / ADC_RESOLUTION;
-  Serial.printf("Voltage: %f v\n", v);
+  Serial.printf("Voltage: %.2f v\n", v);
 
   const float r = V_DIV_RESISTANCE * (VCC / v - 1.0);
-  Serial.printf("Resistance: %f Ohms\n", r);
+  Serial.printf("Resistance: %.2f Ohms\n", r);
 
   const float conductance = 1.0 / r;
   const float force = r <= 600 ?
     (conductance - 0.00075) / 0.00000032639 :
     conductance / 0.000000642857;
-  Serial.printf("Force: %d\n g", force);
+  Serial.printf("Force: %.2f g\n", force);
   Serial.println();
+
+  return force;
 }
 
 void setup() {
   Serial.begin(9600);
-  for (auto ps : pressureSensors)
-    pinMode(ps, INPUT);
+  SerialBT.begin("my-foot");
+
+  // TODO: because Bluetooth makes use of the channel 2 ADC, this needs to use other inputs
+  // see: https://rntlab.com/wp-content/uploads/2018/01/ESP32-DOIT-DEVKIT-V1-Board-Pinout-36-GPIOs-Copy.png
+  // and: https://github.com/espressif/arduino-esp32/issues/2557
+  //for (auto ps : pressureSensors)
+  //  pinMode(ps, INPUT);
 }
 
 void loop() {
   for (auto ps : pressureSensors) {
-    const int fsrAdcReading = analogRead(ps);
+    // TODO: replace this once the sensor inputs are using the right pins
+    const int fsrAdcReading = 100;//analogRead(ps);
     if (fsrAdcReading != 0) {
       Serial.printf("Sensor number %d\n", ps);
       Serial.println("----------------");
-      getPressure(fsrAdcReading);
+      const float force = getPressure(fsrAdcReading);
+      SerialBT.printf("%.2f", force);
       delay(500);
     }
   }
