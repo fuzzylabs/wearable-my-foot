@@ -1,14 +1,17 @@
-package ai.fuzzylabs.wearablemyfoot.ui.main
+package ai.fuzzylabs.insoleandroid.ui.main
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import ai.fuzzylabs.wearablemyfoot.R
+import ai.fuzzylabs.insoleandroid.R
+import ai.fuzzylabs.insoleandroid.model.PressureSensorEvent
+import ai.fuzzylabs.insoleandroid.viewmodel.PageViewModel
+import ai.fuzzylabs.insoleandroid.viewmodel.PressureViewModel
+import ai.fuzzylabs.insoleandroid.view.PressureView
+import androidx.lifecycle.Observer
 
 /**
  * A placeholder fragment containing a simple view.
@@ -16,12 +19,14 @@ import ai.fuzzylabs.wearablemyfoot.R
 class PlaceholderFragment : Fragment() {
 
     private lateinit var pageViewModel: PageViewModel
+    private lateinit var pressureViewModel: PressureViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         pageViewModel = ViewModelProviders.of(this).get(PageViewModel::class.java).apply {
             setIndex(arguments?.getInt(ARG_SECTION_NUMBER) ?: 1)
         }
+        pressureViewModel = ViewModelProviders.of(this).get(PressureViewModel::class.java)
     }
 
     override fun onCreateView(
@@ -29,9 +34,9 @@ class PlaceholderFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val root = inflater.inflate(R.layout.fragment_main, container, false)
-        val textView: TextView = root.findViewById(R.id.section_label)
-        pageViewModel.text.observe(this, Observer<String> {
-            textView.text = it
+        val pressureView: PressureView = root.findViewById(R.id.pressure_view)
+        pressureViewModel.getSensors().observe(this, Observer<PressureSensorEvent> {
+            pressureView.react(it)
         })
         return root
     }

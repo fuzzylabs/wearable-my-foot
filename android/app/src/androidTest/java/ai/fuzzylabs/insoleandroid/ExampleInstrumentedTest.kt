@@ -1,4 +1,4 @@
-package ai.fuzzylabs.wearablemyfoot
+package ai.fuzzylabs.insoleandroid
 
 import androidx.test.InstrumentationRegistry
 import androidx.test.runner.AndroidJUnit4
