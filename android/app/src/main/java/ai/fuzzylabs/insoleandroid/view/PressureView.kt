@@ -18,25 +18,32 @@ class PressureView @JvmOverloads constructor(context: Context, attrs: AttributeS
             style = Paint.Style.FILL_AND_STROKE
         }
 
-    private val queue: Queue<PressureSensorEvent> = LinkedBlockingQueue<PressureSensorEvent>(10)
+    private val textPaint = Paint().apply {
+        isAntiAlias = true
+        color = Color.BLACK
+        textSize = 35f
+    }
+
+    private val capacity = 3
+    private val queue: Queue<PressureSensorEvent> = LinkedBlockingQueue<PressureSensorEvent>(capacity)
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        //val d = resources.getDrawable(R.drawable.ic_foot_overlay)
-        //d.setBounds(left, top, right, bottom)
-        //d.draw(canvas)
-
         queue.map {
-            drawPressureCircle(canvas, it.x, it.y, it.pressure)
+            drawPressureCircle(canvas, it.x, it.y, it.pressure, it.sensor)
         }
     }
 
-    private fun drawPressureCircle(canvas: Canvas, x: Int, y: Int, pressure: Float) {
+    private fun drawPressureCircle(canvas: Canvas, x: Int, y: Int, pressure: Float, n: Int) {
         canvas.drawCircle(x.toFloat(), y.toFloat(), pressure * 10, paint)
+        canvas.drawText(n.toString(), x.toFloat(), y.toFloat(), textPaint)
     }
 
     fun react(event: PressureSensorEvent) {
-        queue.offer(event)
+        if (queue.size == capacity)
+            queue.remove()
+        queue.add(event)
+        this.invalidate()
     }
 }

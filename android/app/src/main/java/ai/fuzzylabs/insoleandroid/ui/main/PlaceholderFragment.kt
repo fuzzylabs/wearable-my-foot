@@ -26,7 +26,7 @@ class PlaceholderFragment : Fragment() {
         pageViewModel = ViewModelProviders.of(this).get(PageViewModel::class.java).apply {
             setIndex(arguments?.getInt(ARG_SECTION_NUMBER) ?: 1)
         }
-        pressureViewModel = ViewModelProviders.of(this).get(PressureViewModel::class.java)
+        pressureViewModel = ViewModelProviders.of(activity!!).get(PressureViewModel::class.java)
     }
 
     override fun onCreateView(
@@ -35,7 +35,7 @@ class PlaceholderFragment : Fragment() {
     ): View? {
         val root = inflater.inflate(R.layout.fragment_main, container, false)
         val pressureView: PressureView = root.findViewById(R.id.pressure_view)
-        pressureViewModel.getSensors().observe(this, Observer<PressureSensorEvent> {
+        pressureViewModel.pressureSensorLiveData.observe(this, Observer<PressureSensorEvent> {
             pressureView.react(it)
         })
         return root

@@ -1,3 +1,3 @@
 package ai.fuzzylabs.insoleandroid.model
 
-data class PressureSensorEvent constructor(val x: Int, val y: Int, val pressure: Float)
+data class PressureSensorEvent constructor(val x: Int, val y: Int, val pressure: Float, val sensor: Int)
