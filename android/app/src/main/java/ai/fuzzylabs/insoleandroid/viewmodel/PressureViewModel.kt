@@ -10,11 +10,11 @@ import kotlin.random.Random
 
 class PressureViewModel : ViewModel() {
     private val sensors = mapOf(
-        Pair(25, Pair(300, 200)),
-        Pair(33, Pair(800, 260)),
-        Pair(32, Pair(300, 800)),
-        Pair(36, Pair(800, 820)),
-        Pair(34, Pair(700, 1400))
+        //Pair(25, Pair(800, 820)),
+        Pair(32, Pair(500, 1600)),
+        //Pair(33, Pair(300, 800)),
+        Pair(34, Pair(300, 200)),
+        Pair(36, Pair(700, 260))
     )
     val pressureSensorLiveData = MediatorLiveData<PressureSensorEvent>()
 
