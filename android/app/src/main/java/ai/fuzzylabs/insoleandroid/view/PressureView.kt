@@ -41,20 +41,20 @@ class PressureView @JvmOverloads constructor(context: Context, attrs: AttributeS
     init {
         Handler().postDelayed({
             updateCircles()
-        }, 250)
+        }, 100  )
     }
 
     private fun updateCircles() {
         val t = System.nanoTime()
         for (e in queue) {
-            if (t - e.first > 1e9) {
+            if (t - e.first > 0.8e9) {
                 queue.remove(e)
                 this.invalidate()
             }
         }
         Handler().postDelayed({
             updateCircles()
-        }, 250)
+        }, 100)
     }
 
     override fun onDraw(canvas: Canvas) {

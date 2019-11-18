@@ -19,4 +19,6 @@ android/gradle
 android/gradlew
 android/gradlew.bat
 
-
+# Python
+**/env
+**/.ipynb_checkpoints
