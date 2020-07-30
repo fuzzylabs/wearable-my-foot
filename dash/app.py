@@ -1,40 +1,32 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import pandas as pd
+import plotly.graph_objs as go
+import plotly.express as px
 
 app = dash.Dash()
 
-colors = {
-    'background': '#111111',
-    'text': '#7FDBFF'
-}
-app.layout = html.Div(style={'backgroundColor': colors['background']}, children=[
-    html.H1(
-        children='Hello Dash',
-        style={
-            'textAlign': 'center',
-            'color': colors['text']
-        }
-    ),
-    html.Div(children='Dash: A web application framework for Python.', style={
-        'textAlign': 'center',
-        'color': colors['text']
-    }),
+pressure_data = pd.read_csv("../data/sample.csv", index_col=0, parse_dates=[0])
+#pressure_ts = px.line(pressure_data, se='Date', y='AAPL.High')
+
+#pressure_data_by_sensor = ...
+
+s = go.Scatter(x=pressure_data.index,
+               y=pressure_data.pressure,
+               name = "Pressure timeseries",
+               line = dict(color = 'blue'),
+               opacity = 0.4)
+
+layout = dict(title='Pressure timeseries')
+
+fig = dict(data=[s], layout=layout)
+
+
+app.layout = html.Div([
     dcc.Graph(
-        id='Graph1',
-        figure={
-            'data': [
-                {'x': [1, 2, 3], 'y': [4, 1, 2], 'type': 'bar', 'name': 'SF'},
-                {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': u'Montréal'},
-            ],
-            'layout': {
-                'plot_bgcolor': colors['background'],
-                'paper_bgcolor': colors['background'],
-                'font': {
-                    'color': colors['text']
-                }
-            }
-        }
+        id='pressure-time-series',
+        figure=fig
     )
 ])
 
