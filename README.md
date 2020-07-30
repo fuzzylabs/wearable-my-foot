@@ -54,6 +54,18 @@ platformio test
 
 ## Android app
 
+The Android app allows the device to connect via Bluetooth and upload data. It's written in [Kotlin](https://kotlinlang.org).
+
+### Building and deploying via Android Studio
+
+TODO
+
+### Screen sharing Android device on linx
+
+TODO (scrcpy)
+
 ## Jupyter notebooks
 
-## Backend
+## Data
+
+## Dash
