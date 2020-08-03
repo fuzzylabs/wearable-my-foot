@@ -5,9 +5,16 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import pandas as pd
 import numpy as np
-import plotly.graph_objs as go
 import plotly.express as px
+from activities import *
 
+activities = ActivitiesHelper()
+
+# Data + graph initialisation
+pressure_data = pd.read_csv("../data/sample.csv", index_col=0, parse_dates=[0])
+pressure_figure = activities.generate_timeseries_plot(pressure_data)
+
+# Dash app setup
 external_stylesheets = [
     "/assets/style.css"
 ]
@@ -19,53 +26,36 @@ app = dash.Dash(
     ],
 )
 
-pressure_data = pd.read_csv("../data/sample.csv", index_col=0, parse_dates=[0])
-
-pressure_plots = []
-for sensor in [1, 3, 4]:
-    series = pressure_data[pressure_data.sensor == sensor]
-    scatter = go.Scatter(x = series.index,
-                        y = series.pressure,
-                        name = f"Sensor {sensor}",
-                        opacity = 0.4)
-    pressure_plots.append(scatter)    
-
-fig = go.Figure(
-    data = pressure_plots,
-    layout = go.Layout(
-        title = "Pressure timeseries",
-        template = "plotly_dark"
+def generate_layout(pressure_figure):
+    return html.Div(
+        [
+            html.Div(
+                id="header",
+                children=[
+                    html.Div(
+                        [
+                            html.H3(
+                                "Wearable My Foot visualisation"
+                            )
+                        ],
+                        className="eight columns",
+                    )
+                ],
+                className="row",
+            ),
+            html.Div(
+                [
+                    dcc.Graph(
+                        id="pressure-time-series",
+                        figure=pressure_figure
+                    )                
+                ],
+                className="row",
+            ),
+        ]
     )
-)
 
-app.layout = html.Div(
-    [
-        html.Div(
-            id="header",
-            children=[
-                html.Div(
-                    [
-                        html.H3(
-                            "Wearable My Foot visualisation"
-                        )
-                    ],
-                    className="eight columns",
-                )
-            ],
-            className="row",
-        ),
-        html.Div(
-            [
-                dcc.Graph(
-                    id="pressure-time-series",
-                    figure=fig
-                )                
-            ],
-            className="row",
-        ),
-    ]
-)
-
+app.layout = generate_layout(pressure_figure)
 
 if __name__ == "__main__":
     app.run_server(debug=True)

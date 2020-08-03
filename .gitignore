@@ -22,3 +22,4 @@ android/gradlew.bat
 # Python
 **/env
 **/.ipynb_checkpoints
+**/__pycache__
