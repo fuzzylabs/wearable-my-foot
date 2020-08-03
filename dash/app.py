@@ -25,16 +25,15 @@ pressure_plots = []
 for sensor in [1, 3, 4]:
     series = pressure_data[pressure_data.sensor == sensor]
     scatter = go.Scatter(x = series.index,
-                         y = series.pressure,
-                         name = f"Sensor {sensor}",
-                         opacity = 0.4)
-    pressure_plots.append(scatter)
-    #pressure_plots.append(px.line(x=series.index, y=series.pressure, title=f"Sensor {sensor}"))
+                        y = series.pressure,
+                        name = f"Sensor {sensor}",
+                        opacity = 0.4)
+    pressure_plots.append(scatter)    
 
-fig = dict(
+fig = go.Figure(
     data = pressure_plots,
-    layout = dict(
-        title="Pressure timeseries",
+    layout = go.Layout(
+        title = "Pressure timeseries",
         template = "plotly_dark"
     )
 )
