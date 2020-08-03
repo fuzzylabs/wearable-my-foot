@@ -22,11 +22,11 @@ In the [esp32](esp32) directory:
 
 ### Optional Virtualenv setup
 
-Feel free to skip if you're installing / have installed PlatformIO using a different method. To initialise the environment using `pip`:
+Feel free to skip if you're installing / have installed PlatformIO using a different method. To initialise the environment using Python 3 and `pip`:
 
 ```
-virtualenv env
-source env/bin/activate
+python -m venv env
+env/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -44,6 +44,12 @@ platformio run
 
 ```
 platformio run -t upload
+```
+
+*Attach a serial monitor*
+
+```
+platformio run -t monitor
 ```
 
 *Run the tests* - this builds a new image and uploads it so that tests are run on the device
