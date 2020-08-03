@@ -1,6 +1,8 @@
 import plotly.graph_objs as go
 
 class ActivitiesHelper:
+    template = "plotly_dark"
+
     '''
     Generate a plot for a timeseries
     '''
@@ -18,7 +20,7 @@ class ActivitiesHelper:
             data = pressure_plots,
             layout = go.Layout(
                 title = "Pressure timeseries",
-                template = "plotly_dark"
+                template = self.template
             )
         )
         return pressure_figure
@@ -27,7 +29,7 @@ class ActivitiesHelper:
     Given a pressure data timeseries, calculate a step count
     '''
     def calculate_step_count(self, pressure_data):
-        return 0
+        return 100
 
     
     '''

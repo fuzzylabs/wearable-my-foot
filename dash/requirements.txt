@@ -2,5 +2,6 @@ dash
 dash-renderer
 dash-html-components
 dash-core-components
+dash-daq
 pandas
 plotly
