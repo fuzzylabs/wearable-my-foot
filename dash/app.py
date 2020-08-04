@@ -67,20 +67,24 @@ app.layout = html.Div(
         ),
         html.Div(
             [
-                html.Div(
+                html.Center(
                     [
-                        html.P("Data points"),
-                        html.P(" "),
-                        data_count_figure,
-                        html.P("Step count"),
-                        html.P(" "),
-                        step_count_figure,
-                        html.P("Cadence"),
-                        html.P(" "),
-                        candence_figure,
+                        html.Div(
+                            [
+                                html.P("Data points"),
+                                html.P(" "),
+                                data_count_figure,
+                                html.P("Step count"),
+                                html.P(" "),
+                                step_count_figure,
+                                html.P("Cadence"),
+                                html.P(" "),
+                                candence_figure,
 
                         ],
-                    className="two columns"
+                            className="two columns"
+                        ),
+                    ]
                 ),
                 html.Div(
                     [
