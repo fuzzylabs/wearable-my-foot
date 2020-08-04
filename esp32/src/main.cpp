@@ -45,10 +45,9 @@ void loop() {
   for (int i = 0; i < countof(pressureSensors); ++i) {
     const int ps = pressureSensors[i];
     const int fsrAdcReading = analogRead(ps);
-    if (fsrAdcReading > 60) {
-      Serial.printf("Millis %lu sensor %i pin %i\n", millis(), i, ps);
-      Serial.println("----------------");
+    if (fsrAdcReading > 200) {
       const float force = getPressure(fsrAdcReading);
+      Serial.printf("Millis %lu sensor %i pin %i adc %i force %f\n", millis(), i, ps, fsrAdcReading, force);
       SerialBT.printf("%d:%.2f\n", ps, force);
       delay(500);
     }
