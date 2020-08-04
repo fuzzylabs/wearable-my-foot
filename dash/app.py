@@ -65,8 +65,17 @@ app.layout = html.Div(
                             "Wearable My Foot visualisation"
                         )
                     ],
-                    className="twelve columns",
+                    className="11 columns",
+                ),
+                html.Div(
+                    [
+                        html.Img(
+                            src="/assets/logo.png"
+                        )
+                    ],
+                    className="1 column"
                 )
+                        
             ],
             className="row",
         ),
