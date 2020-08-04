@@ -85,7 +85,7 @@ app.layout = html.Div(
                                 html.P(" "),
                                 candence_figure,
 
-                        ],
+                            ],
                             className="two columns"
                         ),
                     ]
@@ -100,7 +100,10 @@ app.layout = html.Div(
                     className="ten columns",
                 )
             ],
-            className="row"
+            className="row",
+            style={
+                "background-color": "#111"
+            }
         ),
         html.Div(
             [
