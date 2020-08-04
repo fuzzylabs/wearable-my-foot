@@ -41,15 +41,16 @@ void setup() {
     pinMode(ps, INPUT);
 }
 
+int currentSensorIndex = 0;
+
 void loop() {
-  for (int i = 0; i < countof(pressureSensors); ++i) {
-    const int ps = pressureSensors[i];
-    const int fsrAdcReading = analogRead(ps);
-    if (fsrAdcReading > 200) {
-      const float force = getPressure(fsrAdcReading);
-      Serial.printf("Millis %lu sensor %i pin %i adc %i force %f\n", millis(), i, ps, fsrAdcReading, force);
-      SerialBT.printf("%d:%.2f\n", ps, force);
-      delay(500);
-    }
+  const int ps = pressureSensors[currentSensorIndex];
+  const int fsrAdcReading = analogRead(ps);
+  if (fsrAdcReading > 200) {
+    const float force = getPressure(fsrAdcReading);
+    Serial.printf("Millis %lu sensor %i pin %i adc %i force %f\n", millis(), currentSensorIndex, ps, fsrAdcReading, force);
+    SerialBT.printf("%d:%.2f\n", ps, force);
   }
+  currentSensorIndex = (currentSensorIndex + 1) % countof(pressureSensors);
+  delay(50);
 }
