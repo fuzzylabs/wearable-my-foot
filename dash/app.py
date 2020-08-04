@@ -42,8 +42,7 @@ candence_figure = daq.LEDDisplay(
 
 # Dash app setup
 external_stylesheets = [
-    "/assets/style.css",
-    "https://codepen.io/chriddyp/pen/bWLwgP.css"
+    "/assets/style_extra.css", "/assets/style.css"
 ]
 
 app = dash.Dash(
@@ -64,7 +63,7 @@ app.layout = html.Div(
                             "Wearable My Foot visualisation"
                         )
                     ],
-                    className="eight columns",
+                    className="twelve columns",
                 )
             ],
             className="row",
