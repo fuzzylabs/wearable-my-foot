@@ -8,12 +8,16 @@ import numpy as np
 import plotly.express as px
 import dash_daq as daq
 from activities import *
+import os
 
 activities = ActivitiesHelper()
 
 # Data + graph initialisation
 pressure_data = pd.read_csv("../data/sample.csv", index_col=0, parse_dates=[0])
 pressure_figure = activities.generate_timeseries_plot(pressure_data)
+
+accelerometer_data = pd.read_csv("../data/accelerometer.csv")
+accelerometer_figure = activities.generate_accelerometer_plot(accelerometer_data)
 
 step_count_figure = daq.LEDDisplay(
     id = "step-count",
@@ -94,10 +98,19 @@ app.layout = html.Div(
                         )
                     ],
                     className="ten columns",
-                ),
+                )
             ],
             className="row"
-        )
+        ),
+        html.Div(
+            [
+                dcc.Graph(
+                    id="accelerometer-time-series",
+                    figure=accelerometer_figure
+                )
+            ],
+            className="row"
+        ),
     ]
 )
 

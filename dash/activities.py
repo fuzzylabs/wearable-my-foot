@@ -25,6 +25,29 @@ class ActivitiesHelper:
         )
         return pressure_figure
 
+    def generate_accelerometer_plot(self, dataframe):
+        trace1 = {
+            "name": "x-component", 
+            "type": "scatter",
+            "x": dataframe["x_component_x"],
+            "y": dataframe["x_component_y"]
+        }
+        trace2 = {
+            "name": "y-component",
+            "type": "scatter",
+            "x": dataframe["y_component_x"],
+            "y": dataframe["y_component_y"]
+        }
+        
+        data = [trace1, trace2]
+        return go.Figure(
+            data=data,
+            layout = go.Layout(
+                title = "Accelerometer",
+                template = self.template
+            )
+        )
+
     '''
     Given a pressure data timeseries, calculate a step count
     '''
