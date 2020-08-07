@@ -1,16 +1,18 @@
 #include <Arduino.h>
+#include <math.h>
 //#include "BluetoothSerial.h"
 
 #define countof(arg) ((unsigned int) (sizeof (arg) / sizeof (arg [0])))
-#define ADC_RESOLUTION 4096 // The resolution of the hardware analogue-digital convertor
+//#define ADC_MAX 4096 // The resolution of the hardware analogue-digital convertor
 
 const float VCC = 3.3;
 const float V_DIV_RESISTANCE = 9900.0;
+const float ADC_MAX = pow(2, ADC_RESOLUTION);
 
 // The GPIO pins to which each pressure sensor is connected
 // n.b. these pins must support analog-digital conversion
 const int pressureSensors[] = {
-  12 // Large toe
+  A7 // Large toe
   //  11, // Small toe
   //10  // Heel
 };
@@ -24,7 +26,7 @@ const int pressureSensors[] = {
 //BluetoothSerial SerialBT;
 
 float getPressure(int adcReading) {
-  const float v = VCC * adcReading / ADC_RESOLUTION;
+  const float v = VCC * adcReading / ADC_MAX;
   const float r = V_DIV_RESISTANCE * (VCC / v - 1.0);
   const float conductance = 1.0 / r;
   const float force = r <= 600 ?
@@ -36,7 +38,6 @@ float getPressure(int adcReading) {
 void setup() {
   Serial.begin(9600);
   //SerialBT.begin("my-foot");
-
   for (auto ps : pressureSensors)
     pinMode(ps, INPUT);
 }
@@ -44,8 +45,12 @@ void setup() {
 int currentSensorIndex = 0;
 
 void loop() {
+  //Serial.print("ADC");
+  //Serial.print(ADC_RESOLUTION);
+
   const int ps = pressureSensors[currentSensorIndex];
   const int fsrAdcReading = analogRead(ps);
+  //Serial.print(fsrAdcReading);
   if (fsrAdcReading > 200) {
     const float force = getPressure(fsrAdcReading);
     //Serial.printf("Millis %lu sensor %i pin %i adc %i force %f\n", millis(), currentSensorIndex, ps, fsrAdcReading, force);
