@@ -50,6 +50,8 @@ void loop() {
     const float force = getPressure(fsrAdcReading);
     //Serial.printf("Millis %lu sensor %i pin %i adc %i force %f\n", millis(), currentSensorIndex, ps, fsrAdcReading, force);
     //SerialBT.printf("%d:%.2f\n", ps, force);
+    Serial.print(force);
+    Serial.print("\n");
   }
   currentSensorIndex = (currentSensorIndex + 1) % countof(pressureSensors);
   delay(50);
