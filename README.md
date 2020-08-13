@@ -76,7 +76,7 @@ TODO (scrcpy)
 
 ## Dash
 
-## Other wearable feet things
+## Other wearable feet things
 
 ### Commercial Pressure Sensing Insoles
 
@@ -90,7 +90,7 @@ TODO (scrcpy)
 
 TODO
 
-### Commercial Foot Pods
+### Commercial Foot Pods
 
 * [Stryd](https://www.stryd.com/) - Running power meter, they are [quite opaque](https://support.stryd.com/hc/en-us/articles/115003992194-How-Does-Stryd-Measure-Power-) about how it works although it seems to generally get good reviews.
 * [RunScribe](https://runscribe.com) - Measures gait, power and others. [More transparent](https://runscribe.com/power/) than Stryd on how they calculate running power.
