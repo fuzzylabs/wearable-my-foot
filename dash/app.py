@@ -18,8 +18,8 @@ graphs = GraphsHelper()
 pressure_data = pd.read_csv("../data/sample.csv", index_col=0, parse_dates=[0])
 pressure_figure = graphs.generate_timeseries_plot(pressure_data)
 
-accelerometer_data = pd.read_csv("../data/accelerometer.csv")
-accelerometer_figure = graphs.generate_accelerometer_plot(accelerometer_data)
+# accelerometer_data = pd.read_csv("../data/accelerometer.csv")
+# accelerometer_figure = graphs.generate_accelerometer_plot(accelerometer_data)
 
 step_count_figure = daq.LEDDisplay(
     id = "step-count",
@@ -115,15 +115,15 @@ app.layout = html.Div(
                 "background-color": "#111"
             }
         ),
-        html.Div(
-            [
-                dcc.Graph(
-                    id="accelerometer-time-series",
-                    figure=accelerometer_figure
-                )
-            ],
-            className="row"
-        ),
+        # html.Div(
+        #     [
+        #         dcc.Graph(
+        #             id="accelerometer-time-series",
+        #             figure=accelerometer_figure
+        #         )
+        #     ],
+        #     className="row"
+        # ),
     ]
 )
 
