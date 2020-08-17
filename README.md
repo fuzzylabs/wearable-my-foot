@@ -24,11 +24,11 @@ In the [esp32](esp32) directory:
 
 ### Optional Virtualenv setup
 
-Feel free to skip if you're installing / have installed PlatformIO using a different method. To initialise the environment using `pip`:
+Feel free to skip if you're installing / have installed PlatformIO using a different method. To initialise the environment using Python 3 and `pip`:
 
 ```
-virtualenv env
-source env/bin/activate
+python -m venv env
+env/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -46,6 +46,12 @@ platformio run
 
 ```
 platformio run -t upload
+```
+
+*Attach a serial monitor*
+
+```
+platformio run -t monitor
 ```
 
 *Run the tests* - this builds a new image and uploads it so that tests are run on the device
@@ -89,3 +95,39 @@ python app.py
 ### Modification
 
 * For a guide to Plot.ly graphs, see [here](https://plotly.com/python/basic-charts).
+
+## Other wearable feet things
+
+### Commercial Pressure Sensing Insoles
+
+* [Nurvv](https://www.nurvv.com/en-gb/) - aimed at runners but [this one doesn't like it](https://www.youtube.com/watch?v=bdbcMtIYq24)
+* [Arion](https://www.arion.run/) - aimed at runners
+* [Digitsole](https://www.digitsole.com/) - running / cycling / health
+* [Retisense](https://retisense.com/) - aimed at gait analysis / physio tool
+* [Salted](https://www.salted.ltd/insole) - aimed at golfers
+
+### Open Source / DIY Pressure Sensing Insoles
+
+TODO
+
+### Commercial Foot Pods
+
+* [Stryd](https://www.stryd.com/) - Running power meter, they are [quite opaque](https://support.stryd.com/hc/en-us/articles/115003992194-How-Does-Stryd-Measure-Power-) about how it works although it seems to generally get good reviews.
+* [RunScribe](https://runscribe.com) - Measures gait, power and others. [More transparent](https://runscribe.com/power/) than Stryd on how they calculate running power.
+* [Garmin Running Dynamics Pod](https://buy.garmin.com/en-GB/GB/p/561205) - Measures cadence, stride length etc, can also do power when used with other Garmin devices. [DC Rainmaker review](https://www.dcrainmaker.com/2017/12/garmin-running-power-good.html)
+* [Coros](https://www.coros.com/pod.php) - Running power and other metrics
+
+### Open Source / DIY Foot Pods
+
+TODO
+
+### Running Power
+
+* [George Ron on the Physics](http://www.georgeron.com/2017/09/the-physics-of-running-power.html)
+* [George Ron on Stryd](http://www.georgeron.com/2017/12/stryd-running-power-model.html)
+* [George Ron on RunScribe (GOVSS)](http://www.georgeron.com/2017/11/the-govss-running-power-algorithm-and.html)
+* [Difference between Running and Cycling Power](https://www.trainingpeaks.com/blog/the-differences-between-running-and-cycling-power/)
+* [Running Power meters compared by Outside Online](https://www.outsideonline.com/2413011/running-power-meter-comparison-study) - interesting references to VO2 measurements.
+* [Running Power meters compared by DC Rainmaker](https://www.dcrainmaker.com/2017/12/garmin-running-power-good.html) - focussed initially on Garmin but interesting comparisons with Stryd and RunScribe.
+* [Running Power meters compared by Sport Tracks](https://sporttracks.mobi/blog/how-to-choose-a-running-power-meter)
+* [Polar measure running power using only their smart watch](https://www.polar.com/uk-en/smart-coaching/running-power) - no need for a foot pod. Uses their "proprietary algorithm and it is based on your speed and altitude gradient"
