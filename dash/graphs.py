@@ -8,13 +8,13 @@ class GraphsHelper:
     '''
     def generate_timeseries_plot(self, dataframe):
         pressure_plots = []
-        for sensor in [1, 3, 4]:
-            series = dataframe[dataframe.sensor == sensor]
-            scatter = go.Scatter(x = series.index,
-                                y = series.pressure,
-                                name = f"Sensor {sensor}",
-                                opacity = 0.4)
-            pressure_plots.append(scatter)    
+        for sensor in ["p1", "p2", "p3"]:
+            series = dataframe[sensor]
+            scatter = go.Scatter(x = dataframe.index,
+                                 y = series,
+                                 name = f"Sensor {sensor}",
+                                 opacity = 0.4)
+            pressure_plots.append(scatter)
 
         pressure_figure = go.Figure(
             data = pressure_plots,
@@ -24,6 +24,3 @@ class GraphsHelper:
             )
         )
         return pressure_figure
-
-    def generate_accelerometer_plot(self, dataframe):
-        pass
