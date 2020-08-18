@@ -6,21 +6,21 @@ AI For Your Feet, also known as *Wearable, [my foot](https://en.wiktionary.org/w
 
 ## Hardware
 
-The hardware is based on an ESP32 microcontroller, which is Arduino-compatible.
+The hardware is based on an [Arduino Nano IOT microcontroller](https://store.arduino.cc/arduino-nano-33-iot).
 
 n.b. the current generation of hardware is a prototype. Future iterations will have a better form-factor by using smaller components. Example product links are included for purchasing the components.
 
 * 1 breadboard: https://www.amazon.co.uk/ELEGOO-Breadboard-Solderless-Distribution-Connecting/dp/B01M0QJTI5
 * Wires: https://www.amazon.co.uk/Elegoo-120pcs-Multicolored-Breadboard-arduino-colorful/dp/B01EV70C78/
-* ESP32 microcontroller: https://www.amazon.co.uk/ESP-32S-Development-2-4GHz-Bluetooth-Antenna/dp/B071JR9WS9/
-* Resistors: 
+* Arduino Nano IOT microcontroller: https://www.amazon.co.uk/Arduino-Nano-IoT-headers-mounted/dp/B07WPFQZQ1/
+* Resistors: 3x 10kohm
 * Pressure sensors: https://uk.farnell.com/ohmite/fsr04be/force-sensing-resistor-02ah9085/dp/3216598
 
 ## Microcontroller code
 
-The code for the ESP32 is built using PlatformIO.
+The code for the Arduino is built using PlatformIO.
 
-In the [esp32](esp32) directory:
+In the [arduino-nano](arduino-nano) directory:
 
 ### Optional Virtualenv setup
 
@@ -94,7 +94,7 @@ python app.py
 
 ### Modification
 
-* For a guide to Plot.ly graphs, see [here](https://plotly.com/python/basic-charts).
+* For a guide to Plot.ly graphs etc, see [here](https://plotly.com/python).
 
 ## Other wearable feet things
 
