@@ -2,7 +2,7 @@
 #include <math.h>
 //#include "BluetoothSerial.h"
 
-#define countof(arg) ((unsigned int) (sizeof (arg) / sizeof (arg [0])))
+#define countof(arg) ((int) (sizeof (arg) / sizeof (arg [0])))
 #define ANALOG_READ_DELAY 30
 
 const float VCC = 3.3;
@@ -46,16 +46,25 @@ void setup() {
 void loop() {
   const int ps = pressureSensors[currentSensorIndex];
   const int fsrAdcReading = analogRead(ps);
-  const float force = getPressure(fsrAdcReading);
+  const float force = (int) getPressure(fsrAdcReading);
   pressureSamples[currentSensorIndex] = force;
 
   // When we've sampled every sensor, send a message over Bluetooth
   if (currentSensorIndex == countof(pressureSensors) - 1) {
-    char serialBuffer[64];
-    sprintf(serialBuffer, "Millis %lu sensor %i pin %i adc %i force %f\n", millis(), currentSensorIndex, ps, fsrAdcReading, force);
-    Serial.print(buffer);
+    char stateBuffer[32] = {0};
+    for (int i = 0; i < countof(pressureSensors); ++i) {
+      char* p = stateBuffer + strlen(stateBuffer);
+      itoa(pressureSamples[i], p, 10);
+      if (i < countof(pressureSamples) - 1)
+        strcat(stateBuffer, ",");
+    }
+
+    char serialBuffer[64] = {0};
+    sprintf(serialBuffer, "Millis %lu sensor state %s\n", millis(), stateBuffer);
+    Serial.print(serialBuffer);
+
     //SerialBT.printf("%d:%.2f\n", ps, force);
-    delay(1000 - ANALOG_READ_DELAY * countof(pressureSensors)); // Wait 30 seconds before resuming sampling
+    delay(1000 - ANALOG_READ_DELAY * countof(pressureSensors));
   }
 
   currentSensorIndex = (currentSensorIndex + 1) % countof(pressureSensors);
