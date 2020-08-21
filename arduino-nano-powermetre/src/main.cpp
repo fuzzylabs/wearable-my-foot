@@ -21,19 +21,7 @@ imu_reading_t reading = {};
 
 BLEService powermetreService("1FFF");
 
-/*
-  Characteristics:
-  01xx: Acceleration
-  02xx: Gyroscope
-  xx01, xx02, xx03: x, y and z components respectively
-*/
 BLECharacteristic imuReadingChar("00FF", BLERead | BLENotify, sizeof(imu_reading_t));
-BLEFloatCharacteristic accelerationXChar("0101", BLERead | BLENotify);
-BLEFloatCharacteristic accelerationYChar("0102", BLERead | BLENotify);
-BLEFloatCharacteristic accelerationZChar("0103", BLERead | BLENotify);
-BLEFloatCharacteristic gyroscopeXChar("0201", BLERead | BLENotify);
-BLEFloatCharacteristic gyroscopeYChar("0202", BLERead | BLENotify);
-BLEFloatCharacteristic gyroscopeZChar("0203", BLERead | BLENotify);
 
 #define IMU_POLLING_PERIOD 500
 long lastMillis = 0;
@@ -69,7 +57,7 @@ void setup() {
 
   BLE.advertise();
 
-  Serial.println("BLE setup finished. Waiting for connection");
+  Serial.println("BLE setup finished.");
 }
 
 void pollIMU() {
@@ -106,6 +94,7 @@ void pollIMU() {
 }
 
 void loop() {
+  Serial.println("Wainting for connection");
   BLEDevice central = BLE.central(); // Wait for connection
 
   if(central) {
