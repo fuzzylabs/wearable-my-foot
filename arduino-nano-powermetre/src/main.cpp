@@ -21,7 +21,7 @@ imu_reading_t reading = {};
 
 BLEService powermetreService("1FFF");
 
-BLECharacteristic imuReadingChar("00FF", BLERead | BLENotify, sizeof(imu_reading_t));
+BLECharacteristic imuReadingChar("2FFF", BLERead | BLENotify, sizeof(imu_reading_t));
 
 #define IMU_POLLING_PERIOD 500
 long lastMillis = 0;
@@ -30,9 +30,9 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT); // initialize the built-in LED pin to indicate when a central is connected
 
   Serial.begin(9600);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
+  // while (!Serial) {
+  //   ; // wait for serial port to connect. Needed for native USB port only
+  // }
   if (!IMU.begin()) {
     Serial.println("Failed to initialize IMU!");
     while (true); // halt program
@@ -51,6 +51,7 @@ void setup() {
 
   BLE.setLocalName("Powermetre");
   BLE.setAdvertisedService(powermetreService);
+  Serial.println(powermetreService.uuid());
   powermetreService.addCharacteristic(imuReadingChar);
   BLE.addService(powermetreService);
   imuReadingChar.writeValue(reading.array, sizeof(reading.array));
@@ -94,7 +95,7 @@ void pollIMU() {
 }
 
 void loop() {
-  Serial.println("Wainting for connection");
+  // Serial.println("Wainting for connection");
   BLEDevice central = BLE.central(); // Wait for connection
 
   if(central) {
