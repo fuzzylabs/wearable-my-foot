@@ -9,6 +9,7 @@ typedef struct{
 } vector3d_struct_t;
 
 typedef struct{
+  unsigned long time;
   vector3d_struct_t acceleration;
   vector3d_struct_t gyroscope;
 } imu_reading_struct_t;
@@ -23,7 +24,7 @@ BLEService powermetreService("1FFF");
 
 BLECharacteristic imuReadingChar("2FFF", BLERead | BLENotify, sizeof(imu_reading_t));
 
-#define IMU_POLLING_PERIOD 500
+#define IMU_POLLING_PERIOD 10
 long lastMillis = 0;
 
 void setup() {
@@ -64,6 +65,7 @@ void setup() {
 void pollIMU() {
   float aX, aY, aZ;
   float gX, gY, gZ;
+  unsigned long time;
   const char * spacer = ", ";
  
   if (
@@ -72,6 +74,8 @@ void pollIMU() {
   ) {      
     IMU.readAcceleration(aX, aY, aZ);
     IMU.readGyroscope(gX, gY, gZ);
+    time = millis();
+    Serial.print(time); Serial.print(spacer);
     Serial.print(aX); Serial.print(spacer);
     Serial.print(aY); Serial.print(spacer);
     Serial.print(aZ); Serial.print(spacer);
@@ -81,6 +85,7 @@ void pollIMU() {
 
     reading = {
       .reading = {
+        .time = time,
         .acceleration = {aX, aY, aZ},
         .gyroscope = {gX, gY, gZ}
       }

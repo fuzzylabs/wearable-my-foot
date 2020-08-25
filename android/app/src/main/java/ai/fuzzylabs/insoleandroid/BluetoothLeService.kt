@@ -138,6 +138,6 @@ class BluetoothLeService : Service() {
         const val EXTRA_DATA = "ai.fuzzylabs.insoleandroid.EXTRA_DATA"
         const val STATE_DISCONNECTED = 0
         const val STATE_CONNECTED = 2
-        const val REQUESTED_MTU = 3 + 24
+        const val REQUESTED_MTU = 3 + 28
     }
 }
