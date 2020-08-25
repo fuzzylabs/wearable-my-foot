@@ -29,6 +29,9 @@ class MainActivity : AppCompatActivity() {
     var statusTextView: TextView? = null
     var scanButton: Button? = null
     var connectButton: Button? = null
+    var readingCountTextView: TextView? = null
+    var lastReadingTextView: TextView? = null
+
     var csvWriter: CSVWriter? = null
     var readings: MutableList<IMUReading>? = mutableListOf()
 
@@ -65,6 +68,8 @@ class MainActivity : AppCompatActivity() {
         statusTextView = findViewById(R.id.statusTextView)
         scanButton = findViewById(R.id.scanBtn)
         connectButton = findViewById(R.id.connectBtn)
+        readingCountTextView = findViewById(R.id.readingCountTextView)
+        lastReadingTextView = findViewById(R.id.lastReadingTextView)
 
         // Make sure we have access coarse location enabled, if not, prompt the user to enable it
         if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -139,8 +144,7 @@ class MainActivity : AppCompatActivity() {
         val TAG = "gattUpdateReceiver"
 
         override fun onReceive(context: Context, intent: Intent) {
-            val action = intent.action
-            when (action) {
+            when (intent.action) {
                 BluetoothLeService.ACTION_GATT_CONNECTED -> {
                     statusTextView?.text = "GATT connected"
                     connectButton?.text = "Disconnect"
@@ -149,20 +153,31 @@ class MainActivity : AppCompatActivity() {
                 BluetoothLeService.ACTION_GATT_DISCONNECTED -> {
                     statusTextView?.text = "GATT disconnected"
                     connectButton?.text = "Connect"
-                    csvWriter?.saveResults(readings)
                 }
                 BluetoothLeService.ACTION_GATT_CHARACTERISTIC_FOUND -> {
                     statusTextView?.text = "GATT characteristic found and subscribed to"
                 }
                 BluetoothLeService.ACTION_DATA_AVAILABLE -> {
                     val imuReading = IMUReading.fromByteArray(intent.getByteArrayExtra("IMU_BYTEARRAY"))
-                    statusTextView?.text = imuReading.toString()
+                    lastReadingTextView?.text = imuReading.toString()
                     if (imuReading != null) {
                         readings?.add(imuReading)
+                        updateReadingCount()
                     }
                 }
             }
         }
+    }
+
+    fun saveResults(view: View) {
+        csvWriter?.saveResults(readings)
+        statusTextView?.text = "${readings?.count()} readings saved"
+        readings = mutableListOf()
+        updateReadingCount()
+    }
+
+    fun updateReadingCount() {
+        readingCountTextView?.text = "Readings recorded: ${readings?.count()}"
     }
 
     fun connectToDevice(view: View) {

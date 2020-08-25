@@ -37,6 +37,8 @@ class BluetoothLeService : Service() {
     }
 
     fun disconnectDevice() {
+        val imuCharacteristic = bluetoothGatt?.getService(getServiceUUID())?.getCharacteristic(getCharacteristicUUID())
+        bluetoothGatt?.setCharacteristicNotification(imuCharacteristic, false)
         bluetoothGatt?.disconnect()
     }
 
