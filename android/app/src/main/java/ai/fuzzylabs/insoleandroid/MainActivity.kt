@@ -85,6 +85,20 @@ class MainActivity : AppCompatActivity() {
             })
             builder.show()
         }
+
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            val builder: AlertDialog.Builder = AlertDialog.Builder(this)
+            builder.setTitle("This app needs location access")
+            builder.setMessage("Please grant location access so this app can detect peripherals.")
+            builder.setPositiveButton(android.R.string.ok, null)
+            builder.setOnDismissListener(DialogInterface.OnDismissListener {
+                requestPermissions(
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    PERMISSION_REQUEST_COARSE_LOCATION
+                )
+            })
+            builder.show()
+        }
         initBluetooth()
         val str = "1FFF"
         val uuid = uuidFromShortCode16(str)
