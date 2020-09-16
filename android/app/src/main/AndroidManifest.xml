@@ -27,6 +27,7 @@
             </intent-filter>
         </activity>
         <service android:name="ai.fuzzylabs.insoleandroid.BluetoothLeService"/>
+        <service android:name="ai.fuzzylabs.insoleandroid.imu.IMUSessionService"/>
     </application>
 
 </manifest>

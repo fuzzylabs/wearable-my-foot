@@ -1,8 +1,8 @@
-package ai.fuzzylabs.insoleandroid
+package ai.fuzzylabs.insoleandroid.imu
 
 import java.nio.ByteBuffer
-import java.time.Instant
 
+const val G = 9.8;
 class IMUReading @ExperimentalUnsignedTypes constructor(
     private val time: UInt, // Arduino sends unsigned long, which is 32 bit
     private val aX: Float,
@@ -33,9 +33,29 @@ class IMUReading @ExperimentalUnsignedTypes constructor(
                 val gX = buffer.getFloat(8)
                 val gY = buffer.getFloat(4)
                 val gZ = buffer.getFloat(0)
-                return IMUReading(time.toUInt(), aX, aY, aZ, gX, gY, gZ)
+                return IMUReading(
+                    time.toUInt(),
+                    aX,
+                    aY,
+                    aZ,
+                    gX,
+                    gY,
+                    gZ
+                )
             }
             return null
         }
+
+        fun zero(): IMUReading {
+            return IMUReading(0u,0F,0F,0F,0F,0F,0F)
+        }
+    }
+
+    fun getAX(): Float {
+        return aX;
+    }
+
+    fun getAcceleration(): DoubleArray {
+        return doubleArrayOf(aX.toDouble() * G, aY.toDouble() * G, aZ.toDouble() * G)
     }
 }

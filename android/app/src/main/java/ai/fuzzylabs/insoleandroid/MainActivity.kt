@@ -1,5 +1,8 @@
 package ai.fuzzylabs.insoleandroid
 
+import ai.fuzzylabs.insoleandroid.imu.IMUReading
+import ai.fuzzylabs.insoleandroid.imu.IMUSession
+import ai.fuzzylabs.insoleandroid.imu.IMUSessionService
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -20,8 +23,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import java.util.*
 
+
 private val TAG = MainActivity::class.java.simpleName
 
+@ExperimentalUnsignedTypes
 class MainActivity : AppCompatActivity() {
     private val REQUEST_ENABLE_BT: Int = 1;
     private val PERMISSION_REQUEST_COARSE_LOCATION: Int = 1
@@ -31,6 +36,7 @@ class MainActivity : AppCompatActivity() {
     var connectButton: Button? = null
     var readingCountTextView: TextView? = null
     var lastReadingTextView: TextView? = null
+    var cadenceTextView: TextView? = null
 
     var csvWriter: CSVWriter? = null
     var readings: MutableList<IMUReading>? = mutableListOf()
@@ -43,6 +49,19 @@ class MainActivity : AppCompatActivity() {
 
     fun getServiceUUID(): UUID? {
         return uuidFromShortCode16("1FFF")
+    }
+
+    var sessionService: IMUSessionService? = null
+
+    private val sessionServiceConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(componentName: ComponentName, binder: IBinder) {
+            Log.d(TAG, "IMUSessionService Connected")
+            sessionService = (binder as IMUSessionService.LocalBinder).service
+        }
+
+        override fun onServiceDisconnected(componentName: ComponentName) {
+            sessionService = null
+        }
     }
 
     var bluetoothLeService: BluetoothLeService? = null
@@ -70,6 +89,7 @@ class MainActivity : AppCompatActivity() {
         connectButton = findViewById(R.id.connectBtn)
         readingCountTextView = findViewById(R.id.readingCountTextView)
         lastReadingTextView = findViewById(R.id.lastReadingTextView)
+        cadenceTextView = findViewById(R.id.cadenceTextView)
 
         // Make sure we have access coarse location enabled, if not, prompt the user to enable it
         if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -115,7 +135,15 @@ class MainActivity : AppCompatActivity() {
 
         val gattServiceIntent = Intent(this, BluetoothLeService::class.java)
         val bound = this.bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
-        Log.d("ServiceBinding", bound.toString())
+        Log.d(TAG, bound.toString())
+
+        val sessionBroadcastFilter = IntentFilter()
+        sessionBroadcastFilter.addAction(IMUSessionService.METRICS_UPDATED_ACTION)
+        registerReceiver(imuSessionUpdateReceiver, sessionBroadcastFilter)
+
+        val sessionServiceIntent = Intent(this, IMUSessionService::class.java)
+        val sessionBound = bindService(sessionServiceIntent, sessionServiceConnection, Context.BIND_AUTO_CREATE)
+        Log.d("Session Binding", sessionBound.toString())
 
         csvWriter = CSVWriter(applicationContext)
     }
@@ -147,12 +175,25 @@ class MainActivity : AppCompatActivity() {
         statusTextView?.text = "Device found"
     }
 
+    private val imuSessionUpdateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.action) {
+                IMUSessionService.METRICS_UPDATED_ACTION -> {
+                    val stepCount = sessionService?.cadence
+                    Log.d(TAG, "Cadence: $stepCount")
+                    cadenceTextView?.text = "Cadence: $stepCount"
+                }
+            }
+        }
+    }
+
     // Handles various events fired by the Service.
     // ACTION_GATT_CONNECTED: connected to a GATT server.
     // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
     // ACTION_GATT_SERVICES_DISCOVERED: discovered GATT services.
     // ACTION_DATA_AVAILABLE: received data from the device. This can be a
     // result of read or notification operations.
+
     private val gattUpdateReceiver = object : BroadcastReceiver() {
 
         val TAG = "gattUpdateReceiver"
@@ -176,6 +217,7 @@ class MainActivity : AppCompatActivity() {
                     lastReadingTextView?.text = imuReading.toString()
                     if (imuReading != null) {
                         readings?.add(imuReading)
+                        sessionService?.addReading(imuReading)
                         updateReadingCount()
                     }
                 }

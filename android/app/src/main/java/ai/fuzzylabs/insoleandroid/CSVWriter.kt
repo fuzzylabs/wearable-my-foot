@@ -1,6 +1,6 @@
 package ai.fuzzylabs.insoleandroid
 
-import android.R
+import ai.fuzzylabs.insoleandroid.imu.IMUReading
 import android.content.Context
 import android.util.Log
 import java.io.*
