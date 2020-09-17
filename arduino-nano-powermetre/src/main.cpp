@@ -20,7 +20,7 @@ typedef union{
 } imu_reading_t;
 imu_reading_t reading = {};
 
-BLEService powermetreService("1FFF");
+BLEService powermeterService("1FFF");
 
 BLECharacteristic imuReadingChar("2FFF", BLERead | BLENotify, sizeof(imu_reading_t));
 
@@ -50,11 +50,11 @@ void setup() {
   Serial.print("Size of vector: ");
   Serial.println(sizeof(imu_reading_t));
 
-  BLE.setLocalName("Powermetre");
-  BLE.setAdvertisedService(powermetreService);
-  Serial.println(powermetreService.uuid());
-  powermetreService.addCharacteristic(imuReadingChar);
-  BLE.addService(powermetreService);
+  BLE.setLocalName("Wearable My Foot");
+  BLE.setAdvertisedService(powermeterService);
+  Serial.println(powermeterService.uuid());
+  powermeterService.addCharacteristic(imuReadingChar);
+  BLE.addService(powermeterService);
   imuReadingChar.writeValue(reading.array, sizeof(reading.array));
 
   BLE.advertise();
