@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -169,6 +170,7 @@ class MainActivity : AppCompatActivity() {
     fun onStop(view: View) {
         sessionService?.stopRecording()
         state = STATE_CONNECTED
+        Toast.makeText(applicationContext, getString(R.string.stop_message), Toast.LENGTH_SHORT).show()
         updateView()
     }
 
