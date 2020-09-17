@@ -24,6 +24,10 @@ class IMUSession(samplingFrequency: Int = 100, private val windowSizeMillis: Int
         readings.add(reading)
     }
 
+    fun clear() {
+        readings = mutableListOf()
+    }
+
     fun getWindowStepCount(): Int {
         val steps = countSteps(window)
         Log.d(TAG, "Cadence: $steps")

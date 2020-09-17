@@ -8,7 +8,13 @@ import android.os.IBinder
 import android.util.Log
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
+import java.time.Instant
 
+@ExperimentalUnsignedTypes
 private val TAG = IMUSessionService::class.java.simpleName
 
 @ExperimentalUnsignedTypes
@@ -24,7 +30,7 @@ class IMUSessionService : Service() {
     private val session = IMUSession()
     private var windowCounter = 0
     private val windowStep = 100
-    private val handler = Handler()
+    private var startTimestamp: Instant? = null
 
     var cadence = 0.0
 
@@ -34,21 +40,39 @@ class IMUSessionService : Service() {
     }
 
     fun addReading(reading: IMUReading) {
+        // CPU intensive task, launch in a coroutine
         GlobalScope.launch {
             Log.d(TAG, "reading received")
             if (state == CONNECTED_STATE || state == RECORDING_STATE) {
                 session.shiftWindow(reading)
-                Log.d(TAG, "Window shifter")
 
                 if (state == RECORDING_STATE) {
-                    Log.d(TAG, "Recording added")
                     session.addReading(reading)
                 }
                 windowCounter++
-                Log.d(TAG, "Window counter: $windowCounter")
             }
             if (windowCounter >= windowStep) updateWindowMetrics()
         }
+    }
+
+    fun record() {
+        if (startTimestamp == null) startTimestamp = Instant.now()
+        state = RECORDING_STATE
+    }
+
+    fun pauseRecording() {
+        state = CONNECTED_STATE
+    }
+
+    fun stopRecording() {
+        state = CONNECTED_STATE
+        saveToCSV()
+        reset()
+    }
+
+    fun reset() {
+        startTimestamp = null
+        session.clear()
     }
 
     private fun updateWindowMetrics() {
@@ -58,6 +82,26 @@ class IMUSessionService : Service() {
         sendBroadcast(intent)
 
         windowCounter = 0
+    }
+
+    private fun saveToCSV() {
+        val filename = "$startTimestamp.csv"
+        val path: File? = applicationContext.getExternalFilesDir(null)
+        val file = File(path, filename)
+
+        try {
+            val os: OutputStream = FileOutputStream(file)
+            os.writer().use {
+                it.write("time,aX,aY,aZ,gX,gY,gZ\n")
+                session.readings.forEach { reading -> it.write(reading.toCSVRow()) }
+            }
+        } catch (e: IOException) {
+            // Unable to create file, likely because external storage is
+            // not currently mounted.
+            Log.w(TAG, "Error writing $file", e)
+        }
+
+        Log.d(TAG, file.toString())
     }
 
     companion object {
