@@ -4,7 +4,12 @@ import android.util.Log
 import com.github.psambit9791.jdsp.signal.peaks.FindPeak
 import com.github.psambit9791.jdsp.signal.peaks.Peak
 import com.github.psambit9791.jdsp.transform.PCA
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import java.lang.Integer.max
+import kotlin.math.floor
 
 @ExperimentalUnsignedTypes
 private val TAG = IMUSession::class.java.simpleName
@@ -28,10 +33,19 @@ class IMUSession(samplingFrequency: Int = 100, private val windowSizeMillis: Int
         readings = mutableListOf()
     }
 
-    fun getWindowStepCount(): Int {
+    private fun getWindowStepCount(): Int {
         val steps = countSteps(window)
         Log.d(TAG, "Cadence: $steps")
         return steps
+    }
+
+    fun getVisualisationBytes(): ByteArray {
+        val pc = getFirstPrincipleComponent(window)
+        val minAcceleration = -16.0 * 9.8
+        val maxAcceleration = +16.0 * 9.8
+        return pc.map {
+            floor((it - minAcceleration) / (maxAcceleration - minAcceleration) * 255).toInt().toByte()
+        }.toByteArray()
     }
 
     fun getWindowCadence(): Double {
@@ -47,26 +61,29 @@ class IMUSession(samplingFrequency: Int = 100, private val windowSizeMillis: Int
         }
 
         fun countSteps(readings: Iterable<IMUReading>): Int {
-            val pca0 = getFirstPrincipleComponent(readings)
+            with(Dispatchers.Default){
+                val pca0 = getFirstPrincipleComponent(readings)
 
-            val fp = FindPeak(pca0)
-            var outPeaks: Peak? = null
-            try {
-                outPeaks = fp.detectPeaks()
-            } catch (e: NegativeArraySizeException) {
-                // Zero peaks found and the jDSP throws exceptions
+                val fp = FindPeak(pca0)
+                var outPeaks: Peak? = null
+                try {
+                    outPeaks = fp.detectPeaks()
+                } catch (e: NegativeArraySizeException) {
+                    // Zero peaks found and the jDSP throws exceptions
+                }
+                val noPeaks: Int =  outPeaks?.filterByHeight(35.0, 200.0)?.size ?: 0
+
+                var outTroughs: Peak? = null
+                try {
+                    outTroughs = fp.detectTroughs()
+                } catch (e: NegativeArraySizeException) {
+                    // Zero peaks found and the jDSP throws exceptions
+                }
+                val noTroughs =  outTroughs?.filterByHeight(35.0, 200.0)?.size ?: 0
+
+                return max(noPeaks, noTroughs)
             }
-            val noPeaks: Int =  outPeaks?.filterByHeight(35.0, 200.0)?.size ?: 0
 
-            var outTroughs: Peak? = null
-            try {
-                outTroughs = fp.detectTroughs()
-            } catch (e: NegativeArraySizeException) {
-                // Zero peaks found and the jDSP throws exceptions
-            }
-            val noTroughs =  outTroughs?.filterByHeight(35.0, 200.0)?.size ?: 0
-
-            return max(noPeaks, noTroughs)
         }
     }
 }

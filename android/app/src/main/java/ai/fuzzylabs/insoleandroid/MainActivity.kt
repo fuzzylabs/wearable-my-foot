@@ -5,6 +5,7 @@ import ai.fuzzylabs.insoleandroid.imu.IMUSessionService
 import android.content.*
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
 import android.util.Log
 import android.view.View
@@ -13,7 +14,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintLayout
+import com.gauravk.audiovisualizer.visualizer.HiFiVisualizer
 
 
 private val TAG = MainActivity::class.java.simpleName
@@ -28,6 +29,7 @@ class MainActivity : AppCompatActivity() {
     private var stopButton: Button? = null
     private var continueButton: Button? = null
     private var pauseButton: Button? = null
+    private val visualiser: HiFiVisualizer by lazy { findViewById<HiFiVisualizer>(R.id.visualiser) }
 
     private var sessionService: IMUSessionService? = null
 
@@ -95,6 +97,17 @@ class MainActivity : AppCompatActivity() {
         Log.d("Session Binding", sessionBound.toString())
 
         updateView()
+
+        val handler = Handler()
+        val job: Job? = null
+        val testVis = object: Runnable {
+            override fun run() {
+                val ba = sessionService?.getBytes()
+                visualiser.setRawAudioBytes(ba)
+                handler.postDelayed(this, 100)
+            }
+        }
+        handler.post(testVis)
     }
 
     override fun onDestroy() {

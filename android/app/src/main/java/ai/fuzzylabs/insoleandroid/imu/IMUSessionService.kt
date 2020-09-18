@@ -3,11 +3,9 @@ package ai.fuzzylabs.insoleandroid.imu
 import android.app.Service
 import android.content.Intent
 import android.os.Binder
-import android.os.Handler
 import android.os.IBinder
 import android.util.Log
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -39,9 +37,11 @@ class IMUSessionService : Service() {
         return binder
     }
 
+    private var updateWindowMetricsJob: Job? = null
+
     fun addReading(reading: IMUReading) {
-        // CPU intensive task, launch in a coroutine
-        GlobalScope.launch {
+
+
             Log.d(TAG, "reading received")
             if (state == CONNECTED_STATE || state == RECORDING_STATE) {
                 session.shiftWindow(reading)
@@ -51,8 +51,15 @@ class IMUSessionService : Service() {
                 }
                 windowCounter++
             }
-            if (windowCounter >= windowStep) updateWindowMetrics()
-        }
+            if (windowCounter >= windowStep) {
+                // CPU intensive task, launch in a coroutine
+                if(updateWindowMetricsJob?.isActive == true) {
+                    return //wait until the previous job has finished
+                }
+                updateWindowMetricsJob = GlobalScope.launch {
+                    updateWindowMetrics()
+                }
+            }
     }
 
     fun record() {
@@ -102,6 +109,10 @@ class IMUSessionService : Service() {
         }
 
         Log.d(TAG, file.toString())
+    }
+
+    fun getBytes(): ByteArray {
+        return session.getVisualisationBytes()
     }
 
     companion object {
