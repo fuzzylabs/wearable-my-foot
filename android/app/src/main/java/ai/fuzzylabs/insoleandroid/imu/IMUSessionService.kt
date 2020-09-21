@@ -5,11 +5,9 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
+import android.util.Xml
 import kotlinx.coroutines.*
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.OutputStream
+import java.io.*
 import java.time.Instant
 
 @ExperimentalUnsignedTypes
@@ -30,8 +28,6 @@ class IMUSessionService : Service() {
     private val windowStep = 100
     private var startTimestamp: Instant? = null
 
-    var cadence = 0.0
-
     override fun onBind(p0: Intent?): IBinder? {
         state = CONNECTED_STATE
         return binder
@@ -40,9 +36,6 @@ class IMUSessionService : Service() {
     private var updateWindowMetricsJob: Job? = null
 
     fun addReading(reading: IMUReading) {
-
-
-            Log.d(TAG, "reading received")
             if (state == CONNECTED_STATE || state == RECORDING_STATE) {
                 session.shiftWindow(reading)
 
@@ -74,6 +67,7 @@ class IMUSessionService : Service() {
     fun stopRecording() {
         state = CONNECTED_STATE
         saveToCSV()
+        saveToGPX()
         reset()
     }
 
@@ -82,8 +76,16 @@ class IMUSessionService : Service() {
         session.clear()
     }
 
+    fun getCurrentCadence(): Double {
+        return if (session.elements.size > 0) {
+            session.elements.last().cadence
+        } else {
+            0.0
+        }
+    }
+
     private fun updateWindowMetrics() {
-        cadence = session.getWindowCadence()
+        session.updateWindowMetrics()
 
         val intent = Intent(METRICS_UPDATED_ACTION)
         sendBroadcast(intent)
@@ -96,12 +98,60 @@ class IMUSessionService : Service() {
         val path: File? = applicationContext.getExternalFilesDir(null)
         val file = File(path, filename)
 
+
         try {
             val os: OutputStream = FileOutputStream(file)
             os.writer().use {
                 it.write("time,aX,aY,aZ,gX,gY,gZ\n")
                 session.readings.forEach { reading -> it.write(reading.toCSVRow()) }
             }
+            os.close()
+        } catch (e: IOException) {
+            // Unable to create file, likely because external storage is
+            // not currently mounted.
+            Log.w(TAG, "Error writing $file", e)
+        }
+
+        Log.d(TAG, file.toString())
+    }
+
+    private fun saveToGPX() {
+        val filename = "$startTimestamp.gpx"
+        val path: File? = applicationContext.getExternalFilesDir(null)
+        val file = File(path, filename)
+
+        val elements = session.elements
+
+        val gpx = Xml.newSerializer()
+
+        try {
+            val os: OutputStream = FileOutputStream(file)
+            os.writer().use {
+                gpx.setOutput(it)
+                gpx.startDocument("UTF-8", true)
+
+                gpx.setPrefix("", "http://www.topografix.com/GPX/1/1")
+                gpx.setPrefix("gpxtpx","http://www.garmin.com/xmlschemas/TrackPointExtension/v1")
+                gpx.setPrefix("xsi", "http://www.w3.org/2001/XMLSchema-instance")
+
+                gpx.startTag("http://www.topografix.com/GPX/1/1", "gpx")
+                gpx.attribute("http://www.w3.org/2001/XMLSchema-instance", "schemaLocation", "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd")
+                gpx.attribute(null, "version", "1.1")
+                gpx.attribute(null, "creator", "WearableMyFoot")
+
+                gpx.startTag(null, "trk")
+                gpx.startTag(null, "trkseg")
+
+                elements.forEach { element -> element.fillGPX(gpx) }
+
+                gpx.endTag(null, "trkseg")
+                gpx.endTag(null, "trk")
+
+                gpx.endTag("http://www.topografix.com/GPX/1/1", "gpx")
+                gpx.endDocument()
+                gpx.flush()
+            }
+            os.close()
         } catch (e: IOException) {
             // Unable to create file, likely because external storage is
             // not currently mounted.

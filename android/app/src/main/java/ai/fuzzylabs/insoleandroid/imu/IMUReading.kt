@@ -51,8 +51,8 @@ class IMUReading @ExperimentalUnsignedTypes constructor(
         }
     }
 
-    fun getAX(): Float {
-        return aX;
+    fun getTime(): UInt {
+        return time;
     }
 
     fun getAcceleration(): DoubleArray {

@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
         override fun onServiceConnected(componentName: ComponentName, binder: IBinder) {
             Log.d(TAG, "IMUSessionService Connected")
             sessionService = (binder as IMUSessionService.LocalBinder).service
-            cadenceTextView?.text = getString(R.string.value_cadence, sessionService?.cadence)
+            cadenceTextView?.text = getString(R.string.value_cadence, sessionService?.getCurrentCadence())
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
@@ -99,7 +99,6 @@ class MainActivity : AppCompatActivity() {
         updateView()
 
         val handler = Handler()
-        val job: Job? = null
         val testVis = object: Runnable {
             override fun run() {
                 val ba = sessionService?.getBytes()
@@ -119,7 +118,7 @@ class MainActivity : AppCompatActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 IMUSessionService.METRICS_UPDATED_ACTION -> {
-                    val cadence = sessionService?.cadence
+                    val cadence = sessionService?.getCurrentCadence()
                     Log.d(TAG, "Cadence: $cadence")
                     cadenceTextView?.text = getString(R.string.value_cadence, cadence)
                 }

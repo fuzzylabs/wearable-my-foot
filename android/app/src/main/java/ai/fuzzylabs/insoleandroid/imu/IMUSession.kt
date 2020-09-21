@@ -1,24 +1,22 @@
 package ai.fuzzylabs.insoleandroid.imu
 
-import android.util.Log
 import com.github.psambit9791.jdsp.signal.peaks.FindPeak
 import com.github.psambit9791.jdsp.signal.peaks.Peak
 import com.github.psambit9791.jdsp.transform.PCA
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import java.lang.Integer.max
+import java.time.Instant
 import kotlin.math.floor
 
 @ExperimentalUnsignedTypes
 private val TAG = IMUSession::class.java.simpleName
 
 @ExperimentalUnsignedTypes
-class IMUSession(samplingFrequency: Int = 100, private val windowSizeMillis: Int = 10000){
+class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000){
     private val windowSize = windowSizeMillis / (1000 / samplingFrequency)
     private var window: MutableList<IMUReading> = MutableList(windowSize) {IMUReading.zero()}
     var readings: MutableList<IMUReading> = mutableListOf()
+    var elements: MutableList<IMUSessionElement> = mutableListOf()
 
     fun shiftWindow(reading: IMUReading) {
         window = window.drop(1).toMutableList();
@@ -31,12 +29,20 @@ class IMUSession(samplingFrequency: Int = 100, private val windowSizeMillis: Int
 
     fun clear() {
         readings = mutableListOf()
+        elements = mutableListOf()
+    }
+
+    fun updateWindowMetrics() {
+        val cadence = getWindowCadence()
+        elements.add(IMUSessionElement(Instant.now(), cadence))
     }
 
     private fun getWindowStepCount(): Int {
-        val steps = countSteps(window)
-        Log.d(TAG, "Cadence: $steps")
-        return steps
+        return getWindowStepCount(window)
+    }
+
+    private fun getWindowStepCount(_window: Iterable<IMUReading>): Int {
+        return countSteps(_window)
     }
 
     fun getVisualisationBytes(): ByteArray {
@@ -48,8 +54,12 @@ class IMUSession(samplingFrequency: Int = 100, private val windowSizeMillis: Int
         }.toByteArray()
     }
 
-    fun getWindowCadence(): Double {
-        return getWindowStepCount().toDouble() / windowSizeMillis.toDouble() * 60000.0
+    private fun getWindowCadence(): Double {
+        return getWindowCadence(window)
+    }
+
+    private fun getWindowCadence(_window: Iterable<IMUReading>): Double {
+        return getWindowStepCount(_window).toDouble() / windowSizeMillis.toDouble() * 60000.0
     }
 
     companion object {
