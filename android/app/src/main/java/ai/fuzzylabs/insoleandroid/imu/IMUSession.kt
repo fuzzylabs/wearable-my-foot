@@ -15,6 +15,7 @@ private val TAG = IMUSession::class.java.simpleName
 class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000){
     private val windowSize = windowSizeMillis / (1000 / samplingFrequency)
     private var window: MutableList<IMUReading> = MutableList(windowSize) {IMUReading.zero()}
+    var currentElement: IMUSessionElement = IMUSessionElement(Instant.now(), getWindowCadence())
     var readings: MutableList<IMUReading> = mutableListOf()
     var elements: MutableList<IMUSessionElement> = mutableListOf()
 
@@ -32,9 +33,10 @@ class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000
         elements = mutableListOf()
     }
 
-    fun updateWindowMetrics() {
+    fun updateWindowMetrics(isRecording: Boolean) {
         val cadence = getWindowCadence()
-        elements.add(IMUSessionElement(Instant.now(), cadence))
+        currentElement = IMUSessionElement(Instant.now(), cadence)
+        if(isRecording) elements.add(currentElement)
     }
 
     private fun getWindowStepCount(): Int {

@@ -78,14 +78,14 @@ class IMUSessionService : Service() {
 
     fun getCurrentCadence(): Double {
         return if (session.elements.size > 0) {
-            session.elements.last().cadence
+            session.currentElement.cadence
         } else {
             0.0
         }
     }
 
     private fun updateWindowMetrics() {
-        session.updateWindowMetrics()
+        session.updateWindowMetrics(state == RECORDING_STATE)
 
         val intent = Intent(METRICS_UPDATED_ACTION)
         sendBroadcast(intent)
