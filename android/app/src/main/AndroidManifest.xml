@@ -31,8 +31,22 @@
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
+        <activity
+            android:name="ai.fuzzylabs.insoleandroid.SessionsActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
         <service android:name="ai.fuzzylabs.insoleandroid.BluetoothLeService"/>
         <service android:name="ai.fuzzylabs.insoleandroid.imu.IMUSessionService"/>
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="ai.fuzzylabs.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

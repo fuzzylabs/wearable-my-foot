@@ -186,6 +186,11 @@ class MainActivity : AppCompatActivity() {
         updateView()
     }
 
+    fun onSessionButton(view: View) {
+        val intent = Intent(applicationContext, SessionsActivity::class.java)
+        startActivity(intent)
+    }
+
     private fun updateView() {
         continueButton?.visibility = if(state == STATE_PAUSED) View.VISIBLE else View.INVISIBLE
         pauseButton?.visibility = if(state == STATE_RECORDING) View.VISIBLE else View.INVISIBLE

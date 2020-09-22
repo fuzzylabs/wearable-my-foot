@@ -148,8 +148,12 @@ class WelcomeActivity : AppCompatActivity() {
 
     @ExperimentalUnsignedTypes
     fun onConnectButton(view: View) {
-         // TODO Switch to another activity and connect
         val intent = Intent(applicationContext, MainActivity::class.java)
+        startActivity(intent)
+    }
+
+    fun onSessionButton(view: View) {
+        val intent = Intent(applicationContext, SessionsActivity::class.java)
         startActivity(intent)
     }
 
