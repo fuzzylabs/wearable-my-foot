@@ -18,7 +18,7 @@ The project covers:
 
 ## Hardware
 
-![Wearable My Foot Hardware] (website/wmf-hardware.jpg)
+![Wearable My Foot Hardware](website/wmf-hardware.jpg)
 
 The hardware is based on an [Arduino Nano IOT microcontroller](https://store.arduino.cc/arduino-nano-33-iot).
 
@@ -74,7 +74,7 @@ platformio test
 
 The Android app allows the device to connect via Bluetooth and upload data. It's written in [Kotlin](https://kotlinlang.org).
 
-![Wearable My Foot Android App] (website/wmf-android.png)
+![Wearable My Foot Android App](website/wmf-android.png)
 
 ### Building and deploying via Android Studio
 
