@@ -65,10 +65,19 @@ class IMUSessionService : Service() {
     }
 
     fun stopRecording() {
-        state = CONNECTED_STATE
-        saveToCSV()
-        saveToGPX()
-        reset()
+        exportSession()
+    }
+
+    private fun exportSession() {
+        GlobalScope.launch {
+            state = EXPORTING_STATE
+            saveToCSV()
+            saveToGPX()
+            reset()
+            val intent = Intent(SAVED_ACTION)
+            sendBroadcast(intent)
+            state = CONNECTED_STATE
+        }
     }
 
     fun reset() {
@@ -120,6 +129,7 @@ class IMUSessionService : Service() {
         val path: File? = applicationContext.getExternalFilesDir(null)
         val file = File(path, filename)
 
+        startTimestamp?.let { session.recalculateElements(it) }
         val elements = session.elements
 
         val gpx = Xml.newSerializer()
@@ -168,7 +178,9 @@ class IMUSessionService : Service() {
     companion object {
         const val DISCONNECTED_STATE = "ai.fuzzylabs.insoleandroid.imu.DISCONNECTED_STATE"
         const val CONNECTED_STATE = "ai.fuzzylabs.insoleandroid.imu.CONNECTED_STATE"
+        const val EXPORTING_STATE = "ai.fuzzylabs.insoleandroid.imu.EXPORTING_STATE"
         const val RECORDING_STATE = "ai.fuzzylabs.insoleandroid.imu.RECORDING_STATE"
         const val METRICS_UPDATED_ACTION = "ai.fuzzylabs.insoleandroud.imu.METRICS_UPDATED_ACTION"
+        const val SAVED_ACTION = "ai.fuzzylabs.insoleandroud.imu.SAVED_ACTION"
     }
 }

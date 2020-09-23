@@ -39,12 +39,36 @@ class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000
         if(isRecording) elements.add(currentElement)
     }
 
-    private fun getWindowStepCount(): Int {
-        return getWindowStepCount(window)
-    }
+    fun recalculateElements(startTime: Instant) {
+        val startMillis = readings.first().getTime()
+        val endMillis = readings.last().getTime()
+        val stepMillis: Int = 1000
+        val pca0 = getFirstPrincipleComponent(readings)
+        val times = readings.map { it.getTime() }
 
-    private fun getWindowStepCount(_window: Iterable<IMUReading>): Int {
-        return countSteps(_window)
+        // Get the sequence of time windows to perform calculation on
+        val timeSequence = ((startMillis + stepMillis.toUInt())..(endMillis + windowSizeMillis.toUInt())).step(stepMillis)
+
+        // Get reading (pca0) windows to perform calculations on
+        val windowSequence = sequence<DoubleArray> {
+            for (time in timeSequence) {
+                yield(pca0.zip(times)
+                    .filter { it.second >= time - windowSizeMillis.toUInt() && it.second <= time }
+                    .unzip().first.toDoubleArray())
+            }
+        }
+
+        val elements = sequence<IMUSessionElement> {
+            for ((time, window) in (timeSequence.asIterable()).zip(windowSequence.asIterable())) {
+                val cadence = getWindowCadencePreprocessed(window)
+                val realTime = startTime.plusMillis((time - startMillis).toLong())
+                yield(IMUSessionElement(realTime, cadence))
+            }
+
+        }.toMutableList()
+
+        this.elements = elements
+
     }
 
     fun getVisualisationBytes(): ByteArray {
@@ -56,11 +80,19 @@ class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000
         }.toByteArray()
     }
 
+    private fun getWindowStepCount(_window: DoubleArray): Int {
+        return countSteps(_window)
+    }
+
     private fun getWindowCadence(): Double {
         return getWindowCadence(window)
     }
 
     private fun getWindowCadence(_window: Iterable<IMUReading>): Double {
+        return getWindowCadencePreprocessed(getFirstPrincipleComponent(_window))
+    }
+
+    private fun getWindowCadencePreprocessed(_window: DoubleArray): Double {
         return getWindowStepCount(_window).toDouble() / windowSizeMillis.toDouble() * 60000.0
     }
 
@@ -72,9 +104,8 @@ class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000
             return pca.transform().map { it.component1() }.toDoubleArray()
         }
 
-        fun countSteps(readings: Iterable<IMUReading>): Int {
+        fun countSteps(pca0: DoubleArray): Int {
             with(Dispatchers.Default){
-                val pca0 = getFirstPrincipleComponent(readings)
 
                 val fp = FindPeak(pca0)
                 var outPeaks: Peak? = null

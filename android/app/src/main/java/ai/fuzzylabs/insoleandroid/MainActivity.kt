@@ -10,6 +10,7 @@ import android.os.IBinder
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -24,12 +25,13 @@ class MainActivity : AppCompatActivity() {
 
     private var state: String = STATE_CONNECTED
 
-    private var cadenceTextView: TextView? = null
-    private var recordButton: Button? = null
-    private var stopButton: Button? = null
-    private var continueButton: Button? = null
-    private var pauseButton: Button? = null
-    private val visualiser: HiFiVisualizer by lazy { findViewById<HiFiVisualizer>(R.id.visualiser) }
+    private val cadenceTextView: TextView by lazy { findViewById(R.id.cadenceTextView) }
+    private val recordButton: Button by lazy { findViewById(R.id.recordButton) }
+    private val stopButton: Button by lazy { findViewById(R.id.stopButton) }
+    private val continueButton: Button by lazy { findViewById(R.id.continueButton) }
+    private val pauseButton: Button by lazy { findViewById(R.id.pauseButton) }
+    private val visualiser: HiFiVisualizer by lazy { findViewById(R.id.visualiser) }
+    private val busyProgressBar: ProgressBar by lazy { findViewById(R.id.busyProgressBar) }
 
     private var sessionService: IMUSessionService? = null
 
@@ -65,12 +67,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_powermetre)
-        cadenceTextView = findViewById(R.id.cadenceTextView)
-        recordButton = findViewById(R.id.recordButton)
-        stopButton = findViewById(R.id.stopButton)
-        pauseButton = findViewById(R.id.pauseButton)
-        continueButton = findViewById(R.id.continueButton)
-
 
         val broadcastFilter = IntentFilter()
         broadcastFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED)
@@ -86,6 +82,7 @@ class MainActivity : AppCompatActivity() {
 
         val sessionBroadcastFilter = IntentFilter()
         sessionBroadcastFilter.addAction(IMUSessionService.METRICS_UPDATED_ACTION)
+        sessionBroadcastFilter.addAction(IMUSessionService.SAVED_ACTION)
         registerReceiver(imuSessionUpdateReceiver, sessionBroadcastFilter)
 
         val sessionServiceIntent = Intent(this, IMUSessionService::class.java)
@@ -120,7 +117,12 @@ class MainActivity : AppCompatActivity() {
                 IMUSessionService.METRICS_UPDATED_ACTION -> {
                     val cadence = sessionService?.getCurrentCadence()
                     Log.d(TAG, "Cadence: $cadence")
-                    cadenceTextView?.text = getString(R.string.value_cadence, cadence)
+                    cadenceTextView.text = getString(R.string.value_cadence, cadence)
+                }
+                IMUSessionService.SAVED_ACTION -> {
+                    state = STATE_CONNECTED
+                    Toast.makeText(applicationContext, getString(R.string.saved_message), Toast.LENGTH_SHORT).show()
+                    updateView()
                 }
             }
         }
@@ -181,7 +183,7 @@ class MainActivity : AppCompatActivity() {
 
     fun onStop(view: View) {
         sessionService?.stopRecording()
-        state = STATE_CONNECTED
+        state = STATE_BUSY
         Toast.makeText(applicationContext, getString(R.string.stop_message), Toast.LENGTH_SHORT).show()
         updateView()
     }
@@ -192,15 +194,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateView() {
-        continueButton?.visibility = if(state == STATE_PAUSED) View.VISIBLE else View.INVISIBLE
-        pauseButton?.visibility = if(state == STATE_RECORDING) View.VISIBLE else View.INVISIBLE
-        stopButton?.visibility = if(state == STATE_PAUSED) View.VISIBLE else View.INVISIBLE
-        recordButton?.visibility = if(state == STATE_CONNECTED) View.VISIBLE else View.INVISIBLE
+        continueButton.visibility = if(state == STATE_PAUSED) View.VISIBLE else View.INVISIBLE
+        pauseButton.visibility = if(state == STATE_RECORDING) View.VISIBLE else View.INVISIBLE
+        stopButton.visibility = if(state == STATE_PAUSED) View.VISIBLE else View.INVISIBLE
+        recordButton.visibility = if(state == STATE_CONNECTED) View.VISIBLE else View.INVISIBLE
+        busyProgressBar.visibility = if(state == STATE_BUSY) View.VISIBLE else View.INVISIBLE
     }
 
     companion object {
         const val STATE_CONNECTED = "ai.fuzzylabs.insoleandroid.MainActivity.STATE_CONNECTED"
         const val STATE_RECORDING = "ai.fuzzylabs.insoleandroid.MainActivity.STATE_RECORDING"
         const val STATE_PAUSED = "ai.fuzzylabs.insoleandroid.MainActivity.STATE_PAUSED"
+        const val STATE_BUSY = "ai.fuzzylabs.insoleandroid.MainActivity.STATE_BUSY"
     }
 }

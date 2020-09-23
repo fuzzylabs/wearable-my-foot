@@ -24,5 +24,6 @@
     <string name="pause_button">Pause</string>
     <string name="continue_recording_button">Continue</string>
     <string name="stop_recording_button">Stop</string>
-    <string name="stop_message">Thanks, activity has been recorded</string>
+    <string name="stop_message">The session is being saved</string>
+    <string name="saved_message">The session has been saved</string>
 </resources>
