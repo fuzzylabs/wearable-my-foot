@@ -1,26 +1,36 @@
-# AI For Your Feet
+# Wearable My Foot
 
-This is a project to track gait, posture and exercise with wearable _things_. The project covers a full AI stack, from hardware to models to cloud-deployed web services.
+Powered by [Fuzzy Labs](https://fuzzylabs.ai). Formerly known as 'AI-for-your-feet'.
 
-AI For Your Feet, also known as *Wearable, [my foot](https://en.wiktionary.org/wiki/my_foot)* is built by [Fuzzy Labs](https://fuzzylabs.ai).
+Wearable [My Foot](https://en.wiktionary.org/wiki/my_foot) (WMF) is an Open Source wearables project built on Arduino.
+
+The primary aim is to try and replicate a 'running power' metric similar to that produced by state of the art commercial products such as [Stryd](https://www.stryd.com/). We're using the gyroscope and accelerometer built into the Arduino along with some clever maths in order to produce an estimation of running power.
+
+[Future ideas](future-ideas) include attaching a pressure sensitive insole to the device and tracking things such as gait and posture.
+
+The project covers:
+
+* Building the physical hardware.
+* Writing and deploying the firmware to the hardware.
+* Gathering gyroscope and accelerometer data from the hardware.
+* The algorithm(s) used to transform that data into useful metrics (running power, step counter, ground time, etc.)
+* An Android app that pairs with the hardware and displays the metrics in realtime.
 
 ## Hardware
+
+![Wearable My Foot Hardware] (website/wmf-hardware.jpg)
 
 The hardware is based on an [Arduino Nano IOT microcontroller](https://store.arduino.cc/arduino-nano-33-iot).
 
 n.b. the current generation of hardware is a prototype. Future iterations will have a better form-factor by using smaller components. Example product links are included for purchasing the components.
 
 * 1 breadboard: https://www.amazon.co.uk/ELEGOO-Breadboard-Solderless-Distribution-Connecting/dp/B01M0QJTI5
-* Wires: https://www.amazon.co.uk/Elegoo-120pcs-Multicolored-Breadboard-arduino-colorful/dp/B01EV70C78/
 * Arduino Nano IOT microcontroller: https://www.amazon.co.uk/Arduino-Nano-IoT-headers-mounted/dp/B07WPFQZQ1/
-* Resistors: 3x 10kohm
-* Pressure sensors: https://uk.farnell.com/ohmite/fsr04be/force-sensing-resistor-02ah9085/dp/3216598
+* TODO: battery stuff
 
 ## Microcontroller code
 
-The code for the Arduino is built using PlatformIO.
-
-In the [arduino-nano](arduino-nano) (for pressure sensing code) or [arduino-nano-powermetre](arduino-nano-powermetre) (for power metre)  directory:
+The [firmware code](firmware) for the Arduino is built using PlatformIO.
 
 ### Optional Virtualenv setup
 
@@ -64,6 +74,8 @@ platformio test
 
 The Android app allows the device to connect via Bluetooth and upload data. It's written in [Kotlin](https://kotlinlang.org).
 
+![Wearable My Foot Android App] (website/wmf-android.png)
+
 ### Building and deploying via Android Studio
 
 0. Enable the development mode on your Android device, and connect the device with a USB cable
@@ -85,7 +97,7 @@ TODO (scrcpy)
 
 ## Jupyter notebooks
 
-[notebooks](notebooks) directory contains notebooks with code used in the experiments
+The [notebooks](notebooks) directory contains notebooks with code used in the experiments
 
 * powermetre.ipynb -- the notebook for estimating the power of a walk in a straight path. Requires three CSV files
   - Measurements of acceleration when the device is at rest for calibration (provided at [data/still.csv](data/still.csv)
