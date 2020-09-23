@@ -1,6 +1,8 @@
+nbstripout
 jupyter
 pandas
 matplotlib
 sklearn
 seaborn
-
+gpxpy
+tqdm
