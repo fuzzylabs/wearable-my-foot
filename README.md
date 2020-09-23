@@ -16,6 +16,10 @@ n.b. the current generation of hardware is a prototype. Future iterations will h
 * Resistors: 3x 10kohm
 * Pressure sensors: https://uk.farnell.com/ohmite/fsr04be/force-sensing-resistor-02ah9085/dp/3216598
 
+### Batteries and power
+
+There are a wide range of battery options for the Arduino Nano. The Nano operates at 3.3v and tolerates up to 21v input, but it's best to use a battery that's as close to the 3.3v as possible. We're using a 3.7v 1000mAh lithium ion batteries - https://www.amazon.co.uk/gp/product/B07CYMYMS9 in combination with a charger module - https://www.amazon.co.uk/gp/product/B07D2G345P. *n.b.* this battery comes with a JST 1.25mm connector, so you'll need a compatible female version of that connector in order to hook it up. JST connectors can be a little confusing, see https://hackaday.com/2017/12/27/jst-is-not-a-connector.
+
 ## Microcontroller code
 
 The code for the Arduino is built using PlatformIO.
