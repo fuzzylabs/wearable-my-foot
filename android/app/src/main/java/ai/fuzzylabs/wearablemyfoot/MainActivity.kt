@@ -1,7 +1,7 @@
-package ai.fuzzylabs.insoleandroid
+package ai.fuzzylabs.wearablemyfoot
 
-import ai.fuzzylabs.insoleandroid.imu.IMUReading
-import ai.fuzzylabs.insoleandroid.imu.IMUSessionService
+import ai.fuzzylabs.wearablemyfoot.imu.IMUReading
+import ai.fuzzylabs.wearablemyfoot.imu.IMUSessionService
 import android.content.*
 import android.os.Build
 import android.os.Bundle
@@ -20,6 +20,11 @@ import com.gauravk.audiovisualizer.visualizer.HiFiVisualizer
 
 private val TAG = MainActivity::class.java.simpleName
 
+/**
+ * Main activity
+ *
+ * Shows running visualisation and metrics. Has controls for starting and stopping the recording
+ */
 @ExperimentalUnsignedTypes
 class MainActivity : AppCompatActivity() {
 
@@ -39,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         override fun onServiceConnected(componentName: ComponentName, binder: IBinder) {
             Log.d(TAG, "IMUSessionService Connected")
             sessionService = (binder as IMUSessionService.LocalBinder).service
-            cadenceTextView?.text = getString(R.string.value_cadence, sessionService?.getCurrentCadence())
+            cadenceTextView.text = getString(R.string.value_cadence, sessionService?.getCurrentCadence())
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
@@ -157,30 +162,45 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Connect to BLE device if not yet connected
+     */
     fun connectToDevice() {
         if(bluetoothLeService?.connectionState == BluetoothLeService.STATE_DISCONNECTED) {
             bluetoothLeService?.connectDevice()
         }
     }
 
+    /**
+     * Start recording
+     */
     fun onRecord(view: View) {
         sessionService?.record()
         state = STATE_RECORDING
         updateView()
     }
 
+    /**
+     * Pause recording
+     */
     fun onPause(view: View) {
         sessionService?.pauseRecording()
         state = STATE_PAUSED
         updateView()
     }
 
+    /**
+     * Continue recording
+     */
     fun onContinue(view: View) {
         sessionService?.record()
         state = STATE_RECORDING
         updateView()
     }
 
+    /**
+     * Stop recording and save
+     */
     fun onStop(view: View) {
         sessionService?.stopRecording()
         state = STATE_BUSY
@@ -188,6 +208,9 @@ class MainActivity : AppCompatActivity() {
         updateView()
     }
 
+    /**
+     * Go to sessions screen
+     */
     fun onSessionButton(view: View) {
         val intent = Intent(applicationContext, SessionsActivity::class.java)
         startActivity(intent)

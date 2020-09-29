@@ -1,16 +1,26 @@
-package ai.fuzzylabs.insoleandroid.imu
+package ai.fuzzylabs.wearablemyfoot.imu
 
 import com.github.psambit9791.jdsp.signal.peaks.FindPeak
 import com.github.psambit9791.jdsp.signal.peaks.Peak
 import com.github.psambit9791.jdsp.transform.PCA
 import kotlinx.coroutines.Dispatchers
-import java.lang.Integer.max
 import java.time.Instant
 import kotlin.math.floor
+import kotlin.math.max
 
 @ExperimentalUnsignedTypes
 private val TAG = IMUSession::class.java.simpleName
 
+/**
+ * Session of an interaction with IMU
+ *
+ * @constructor Creates and prepares a session for recording
+ * @param[samplingFrequency] Sampling frequency of an IMU (Hz)
+ * @param[windowSizeMillis] Window size to be used for calculation (ms)
+ * @property[currentElement] The last session element ([IMUSessionElement]) calculated
+ * @property[readings] List of [IMUReading] recorded during a session
+ * @property[elements] List of [IMUSessionElement] calculated during a session
+ */
 @ExperimentalUnsignedTypes
 class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000){
     private val windowSize = windowSizeMillis / (1000 / samplingFrequency)
@@ -19,15 +29,30 @@ class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000
     var readings: MutableList<IMUReading> = mutableListOf()
     var elements: MutableList<IMUSessionElement> = mutableListOf()
 
+    /**
+     * Shift current window by adding new reading
+     *
+     * @param[reading] Reading to be added
+     */
     fun shiftWindow(reading: IMUReading) {
         window = window.drop(1).toMutableList();
         window.add(reading)
     }
 
+    /**
+     * Add reading to the recording
+     *
+     * @param[reading] Reading to be added
+     */
     fun addReading(reading: IMUReading) {
         readings.add(reading)
     }
 
+    /**
+     * Clear the recording
+     *
+     * Makes [readings] and [elements] lists empty
+     */
     fun clear() {
         readings = mutableListOf()
         elements = mutableListOf()
@@ -39,6 +64,11 @@ class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000
         if(isRecording) elements.add(currentElement)
     }
 
+    /**
+     * Recalculate the running session
+     *
+     * Recalculates all elements of a session (to mitigate the limitation of local PCA)
+     */
     fun recalculateElements(startTime: Instant) {
         val startMillis = readings.first().getTime()
         val endMillis = readings.last().getTime()
@@ -71,6 +101,9 @@ class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000
 
     }
 
+    /**
+     * Get ByteArray representation of the window for visualisation
+     */
     fun getVisualisationBytes(): ByteArray {
         val pc = getFirstPrincipleComponent(window)
         val minAcceleration = -16.0 * 9.8
@@ -88,15 +121,31 @@ class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000
         return getWindowCadence(window)
     }
 
+    /**
+     * Get cadence for a window of raw readings
+     *
+     * @param[_window] An iterable of raw [IMUReading]s
+     */
     private fun getWindowCadence(_window: Iterable<IMUReading>): Double {
         return getWindowCadencePreprocessed(getFirstPrincipleComponent(_window))
     }
 
+    /**
+     * Get cadence for a window of preprocessed readings
+     *
+     * @param[_window] Array of preprocessed acceleration values, e.g. with PCA
+     * @see[getFirstPrincipleComponent]
+     */
     private fun getWindowCadencePreprocessed(_window: DoubleArray): Double {
         return getWindowStepCount(_window).toDouble() / windowSizeMillis.toDouble() * 60000.0
     }
 
     companion object {
+        /**
+         * Perform PCA and get first Principle Component
+         *
+         * @param[readings] Collection of raw [IMUReading]s
+         */
         private fun getFirstPrincipleComponent(readings: Iterable<IMUReading>): DoubleArray {
             val acceleration = readings.map { it.getAcceleration() }
             val pca = PCA(acceleration.toTypedArray(), 3)
@@ -104,6 +153,14 @@ class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000
             return pca.transform().map { it.component1() }.toDoubleArray()
         }
 
+        /**
+         * Count steps using peak detection
+         *
+         * Implements peak detection step counting. A step is counted if it exceeds
+         * positive or negative 35.0 m/s^2
+         *
+         * @param[pca0] Input array, the first principle component is assumed
+         */
         fun countSteps(pca0: DoubleArray): Int {
             with(Dispatchers.Default){
 

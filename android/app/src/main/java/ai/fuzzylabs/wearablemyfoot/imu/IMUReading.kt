@@ -1,9 +1,24 @@
-package ai.fuzzylabs.insoleandroid.imu
+package ai.fuzzylabs.wearablemyfoot.imu
 
 import java.nio.ByteBuffer
 
 const val G = 9.8;
-class IMUReading @ExperimentalUnsignedTypes constructor(
+
+
+/**
+ * A raw reading received from an Arduino IMU
+ *
+ * @constructor Creates an IMU reading instance with defined time, acceleration and angular velocity
+ * @param[time] time from the start of Arduino, as an unsigned 32-bit integert
+ * @param[aX] acceleration in +X direction (measured in Gs)
+ * @param[aY] acceleration in +Y direction (measured in Gs)
+ * @param[aZ] acceleration in +Z direction (measured in Gs)
+ * @param[gX] angular velocity around +X axis (measured in deg/s)
+ * @param[gY] angular velocity around +Y axis (measured in deg/s)
+ * @param[gZ] angular velocity around +Z axis (measured in deg/s)
+ */
+@ExperimentalUnsignedTypes
+class IMUReading constructor(
     private val time: UInt, // Arduino sends unsigned long, which is 32 bit
     private val aX: Float,
     private val aY: Float,
@@ -16,11 +31,15 @@ class IMUReading @ExperimentalUnsignedTypes constructor(
         return "${time}\n${aX}\n${aY}\n${aZ}\n${gX}\n${gY}\n${gZ}"
     }
 
+    /**
+     * Get CSV row representation
+     *
+     * @return String to be used on CSV export
+     */
     fun toCSVRow(): String {
         return "${time},${aX},${aY},${aZ},${gX},${gY},${gZ}\n"
     }
 
-    @ExperimentalUnsignedTypes
     companion object {
         fun fromByteArray(byteArray: ByteArray?): IMUReading? {
             if (byteArray != null) {
@@ -51,10 +70,18 @@ class IMUReading @ExperimentalUnsignedTypes constructor(
         }
     }
 
+    /**
+     * @return Time of the reading in ms from the start of the Arduino device
+     */
     fun getTime(): UInt {
         return time;
     }
 
+    /**
+     * Get acceleration vector (in m/s^2)
+     *
+     * @return DoubleArray of acceleration in m/s^2 (+X, +Y, +Z)
+     */
     fun getAcceleration(): DoubleArray {
         return doubleArrayOf(aX.toDouble() * G, aY.toDouble() * G, aZ.toDouble() * G)
     }

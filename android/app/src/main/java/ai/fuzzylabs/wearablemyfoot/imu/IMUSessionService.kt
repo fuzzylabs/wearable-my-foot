@@ -1,4 +1,4 @@
-package ai.fuzzylabs.insoleandroid.imu
+package ai.fuzzylabs.wearablemyfoot.imu
 
 import android.app.Service
 import android.content.Intent
@@ -13,6 +13,11 @@ import java.time.Instant
 @ExperimentalUnsignedTypes
 private val TAG = IMUSessionService::class.java.simpleName
 
+/**
+ * Service that handles [IMUSession]
+ *
+ * Handles session state (connection, recording and saving)
+ */
 @ExperimentalUnsignedTypes
 class IMUSessionService : Service() {
 
@@ -35,6 +40,12 @@ class IMUSessionService : Service() {
 
     private var updateWindowMetricsJob: Job? = null
 
+    /**
+     * Add reading to [IMUSession]
+     *
+     * Depending on the current state -- add a raw reading to the recording, shift the current
+     * window, and/or calculate runnning metrics from the window
+     */
     fun addReading(reading: IMUReading) {
             if (state == CONNECTED_STATE || state == RECORDING_STATE) {
                 session.shiftWindow(reading)
@@ -55,19 +66,31 @@ class IMUSessionService : Service() {
             }
     }
 
+    /**
+     * Start or continue session recording
+     */
     fun record() {
         if (startTimestamp == null) startTimestamp = Instant.now()
         state = RECORDING_STATE
     }
 
+    /**
+     * Pause session recording
+     */
     fun pauseRecording() {
         state = CONNECTED_STATE
     }
 
+    /**
+     * Stop recording and save results
+     */
     fun stopRecording() {
         exportSession()
     }
 
+    /**
+     * Export session to CSV and GPX
+     */
     private fun exportSession() {
         GlobalScope.launch {
             state = EXPORTING_STATE
@@ -80,11 +103,19 @@ class IMUSessionService : Service() {
         }
     }
 
+    /**
+     * Reset the current [IMUSession]
+     */
     fun reset() {
         startTimestamp = null
         session.clear()
     }
 
+    /**
+     * Get current value of cadence
+     *
+     * @return Returns the last calculated cadence estimate (or 0.0, if none is recorded)
+     */
     fun getCurrentCadence(): Double {
         return if (session.elements.size > 0) {
             session.currentElement.cadence
@@ -171,10 +202,23 @@ class IMUSessionService : Service() {
         Log.d(TAG, file.toString())
     }
 
+    /**
+     * Get bytes for visualisation
+     *
+     * @return byte array representation of the current window
+     */
     fun getBytes(): ByteArray {
         return session.getVisualisationBytes()
     }
 
+    /**
+     * @property[DISCONNECTED_STATE] Service is disconnected
+     * @property[CONNECTED_STATE] Services is connected
+     * @property[EXPORTING_STATE] The current session is being exported
+     * @property[RECORDING_STATE] The current session is being recorded
+     * @property[METRICS_UPDATED_ACTION] Metrics update is available
+     * @property[SAVED_ACTION] A session has been saved
+     */
     companion object {
         const val DISCONNECTED_STATE = "ai.fuzzylabs.insoleandroid.imu.DISCONNECTED_STATE"
         const val CONNECTED_STATE = "ai.fuzzylabs.insoleandroid.imu.CONNECTED_STATE"

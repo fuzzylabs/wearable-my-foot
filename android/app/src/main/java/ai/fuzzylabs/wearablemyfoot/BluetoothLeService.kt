@@ -1,4 +1,4 @@
-package ai.fuzzylabs.insoleandroid
+package ai.fuzzylabs.wearablemyfoot
 
 import android.app.Service
 import android.bluetooth.*
@@ -6,22 +6,29 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
-import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.Handler
 import android.os.IBinder
 import android.os.ParcelUuid
 import android.util.Log
-import android.view.View
-import androidx.core.app.ActivityCompat.startActivityForResult
 import java.util.*
 
 private val TAG = BluetoothLeService::class.java.simpleName
 
-// A service that interacts with the BLE device via the Android BLE API.
+/**
+ * A service that interacts with the BLE device via the Android BLE API
+ *
+ * Used for scanning for a compatible peripheral device, connecting to a device
+ * and receiving readings from a device
+ *
+ * @property[connectionState] current state of BLE connection
+ * @property[isScanning] true, iff the BLE scan is being performed
+ * @property[device] found BLE device, or null
+ * @property[bluetoothGatt] Bluetooth Gatt instance, iff connected to a BLE service, null otherwise
+ */
 class BluetoothLeService : Service() {
-    var connectionState = Companion.STATE_DISCONNECTED
+    var connectionState = STATE_DISCONNECTED
     var isScanning = false
     var device: BluetoothDevice? = null
 
@@ -41,10 +48,16 @@ class BluetoothLeService : Service() {
         return uuidFromShortCode16("2FFF")
     }
 
+    /**
+     * Create BLE connection if [device] found
+     */
     fun connectDevice() {
         bluetoothGatt = device?.connectGatt(this, false, this.gattCallback)
     }
 
+    /**
+     * Disconnect from BLE device
+     */
     fun disconnectDevice() {
         val imuCharacteristic = bluetoothGatt?.getService(getServiceUUID())?.getCharacteristic(getCharacteristicUUID())
         bluetoothGatt?.setCharacteristicNotification(imuCharacteristic, false)
@@ -54,6 +67,11 @@ class BluetoothLeService : Service() {
     private val bluetoothLeScanner = BluetoothAdapter.getDefaultAdapter().bluetoothLeScanner
     private val handler = Handler()
 
+    /**
+     * Get BLE device name
+     *
+     * @return the advertised name of the found BLE [device], or null
+     */
     fun getDeviceName(): String? {
         return device?.name
     }
@@ -87,6 +105,9 @@ class BluetoothLeService : Service() {
 
     private val stopScanDevicesRunnable = Runnable {stopScanDevices()}
 
+    /**
+     * Initiate BLE scan
+     */
     fun scanDevices() {
         if (!isScanning) { // Stops scanning after a pre-defined scan period.
             device = null
@@ -187,6 +208,16 @@ class BluetoothLeService : Service() {
         return mBinder
     }
 
+    /**
+     * @property[ACTION_DATA_AVAILABLE] Sent if new data is available on the peripheral device
+     * @property[ACTION_DEVICE_FOUND] Scanning for compatible devices was successful
+     * @property[ACTION_DEVICE_NOT_FOUND] Scanning for compatible devices was unsuccessful
+     * @property[ACTION_GATT_CONNECTED] Connected to a GATT service on a peripheral device
+     * @property[ACTION_GATT_CHARACTERISTIC_FOUND] Correct characteristic to read from on a peripheral device found
+     * @property[ACTION_GATT_DISCONNECTED] Disconnected from a GATT service
+     * @property[REQUESTED_MTU] MTU requested from a peripheral device (in bytes)
+     * @property[SCAN_PERIOD] Scanning period in milliseconds
+     */
     companion object {
         const val ACTION_DEVICE_FOUND = "ai.fuzzylabs.insoleandroid.ACTION_DEVICE_FOUND"
         const val ACTION_DEVICE_NOT_FOUND = "ai.fuzzylabs.insoleandroid.ACTION_DEVICE_NOT_FOUND"

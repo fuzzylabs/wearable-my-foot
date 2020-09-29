@@ -1,4 +1,4 @@
-package ai.fuzzylabs.insoleandroid
+package ai.fuzzylabs.wearablemyfoot
 
 import android.content.Context
 import android.content.Intent
@@ -13,6 +13,11 @@ import java.io.File
 
 private val TAG = SessionView::class.java.simpleName
 
+/**
+ * View of a recorded and saved running session
+ *
+ * To be displayed on the activities/sessions screen
+ */
 class SessionView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : ConstraintLayout(
     context,
     attrs,
@@ -35,6 +40,11 @@ class SessionView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         gpxExportButton?.setOnClickListener { onGpxExportButton() }
     }
 
+    /**
+     * Populate view with saved session attributes
+     *
+     * @param[session] saved session to populate with
+     */
     fun setSession(session: SavedSession) {
         filenamePrefix = session.filenamePrefix
         sessionNameTextView.text = filenamePrefix

@@ -1,6 +1,5 @@
-package ai.fuzzylabs.insoleandroid
+package ai.fuzzylabs.wearablemyfoot
 
-import ai.fuzzylabs.insoleandroid.imu.IMUReading
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
@@ -18,6 +17,11 @@ import androidx.appcompat.app.AppCompatActivity
 
 private val TAG = WelcomeActivity::class.java.simpleName
 
+/**
+ * Welcome screen activity
+ *
+ * Allows scanning for BLE devices and connect
+ */
 class WelcomeActivity : AppCompatActivity() {
 
     private var state = NOT_FOUND_STATE
@@ -40,7 +44,6 @@ class WelcomeActivity : AppCompatActivity() {
         checkPermissions()
         initBluetooth()
 
-        // TODO Bind to BLE Service
         val broadcastFilter = IntentFilter()
         broadcastFilter.addAction(BluetoothLeService.ACTION_DEVICE_NOT_FOUND)
         broadcastFilter.addAction(BluetoothLeService.ACTION_DEVICE_FOUND)
@@ -90,6 +93,9 @@ class WelcomeActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Check if the application has required permissions
+     */
     private fun checkPermissions() {
         // TODO Check Android version and request permissions accordingly
         // Make sure we have access coarse location enabled, if not, prompt the user to enable it
@@ -138,6 +144,9 @@ class WelcomeActivity : AppCompatActivity() {
         startScan()
     }
 
+    /**
+     * Start scan (if not yet started and BLE service is binded)
+     */
     fun startScan() {
         if (bluetoothLeService != null) {
             bluetoothLeService?.scanDevices()
@@ -146,17 +155,26 @@ class WelcomeActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Connect to a BLE device and go to the Main screen
+     */
     @ExperimentalUnsignedTypes
     fun onConnectButton(view: View) {
         val intent = Intent(applicationContext, MainActivity::class.java)
         startActivity(intent)
     }
 
+    /**
+     * Go to recorded sessions screen
+     */
     fun onSessionButton(view: View) {
         val intent = Intent(applicationContext, SessionsActivity::class.java)
         startActivity(intent)
     }
 
+    /**
+     * Update view according to its current state
+     */
     fun updateView() {
         scanButton?.isEnabled = (state != SCANNING_STATE)
         connectButton?.isEnabled = (state == FOUND_STATE)

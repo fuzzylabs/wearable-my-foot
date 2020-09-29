@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="ai.fuzzylabs.insoleandroid">
+          package="ai.fuzzylabs.wearablemyfoot">
 
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
@@ -17,7 +17,7 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
         <activity
-                android:name="ai.fuzzylabs.insoleandroid.WelcomeActivity"
+                android:name="ai.fuzzylabs.wearablemyfoot.WelcomeActivity"
                 android:label="@string/app_name"
                 android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -27,17 +27,17 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="ai.fuzzylabs.insoleandroid.MainActivity"
+            android:name="ai.fuzzylabs.wearablemyfoot.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
         <activity
-            android:name="ai.fuzzylabs.insoleandroid.SessionsActivity"
+            android:name="ai.fuzzylabs.wearablemyfoot.SessionsActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
-        <service android:name="ai.fuzzylabs.insoleandroid.BluetoothLeService"/>
-        <service android:name="ai.fuzzylabs.insoleandroid.imu.IMUSessionService"/>
+        <service android:name="ai.fuzzylabs.wearablemyfoot.BluetoothLeService"/>
+        <service android:name="ai.fuzzylabs.wearablemyfoot.imu.IMUSessionService"/>
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="ai.fuzzylabs.fileprovider"

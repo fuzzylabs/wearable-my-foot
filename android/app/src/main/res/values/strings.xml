@@ -1,7 +1,5 @@
 <resources>
     <string name="app_name">Wearable My Foot</string>
-    <string name="tab_text_1">Pressure</string>
-    <string name="tab_text_2">Metrics</string>
 
 <!--    Welcome screen-->
     <string name="welcome_mesg">Welcome to WMF!</string>

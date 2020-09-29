@@ -1,4 +1,4 @@
-package ai.fuzzylabs.insoleandroid
+package ai.fuzzylabs.wearablemyfoot
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -8,6 +8,11 @@ import java.io.File
 
 private val TAG = SessionsActivity::class.java.simpleName
 
+/**
+ * Activity that displays recorded and saved sessions
+ *
+ * Allows exporting CSV and GPX files for sessions (if available)
+ */
 class SessionsActivity : AppCompatActivity() {
     private val viewManager: RecyclerView.LayoutManager by lazy { LinearLayoutManager(this) }
     private val viewAdapter: RecyclerView.Adapter<*> by lazy { SessionsAdapter(getSavedSessions()) }
