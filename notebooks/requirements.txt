@@ -6,3 +6,4 @@ sklearn
 seaborn
 gpxpy
 tqdm
+fitparse
