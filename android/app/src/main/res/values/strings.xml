@@ -1,5 +1,27 @@
 <resources>
-    <string name="app_name">AI insole</string>
-    <string name="tab_text_1">Pressure</string>
-    <string name="tab_text_2">Metrics</string>
+    <string name="app_name">Wearable My Foot</string>
+
+<!--    Welcome screen-->
+    <string name="welcome_mesg">Welcome to WMF!</string>
+    <string name="wmf_instructions">"Let's get started:  \n \n1) Install the latest firmware on the WMF device \n2) Strap the device on your foot  \n \nNow pair WMF with your phone.     "</string>
+    <string name="scan_btn_text">Scan</string>
+    <string name="connect_btn_text">Connect</string>
+    <string name="status_ble_scanning">Scanning for WMF devices…</string>
+    <string name="status_ble_found">Device found: %1$s</string>
+    <string name="status_ble_not_found">Not found, try scanning again</string>
+
+<!--    Main screen-->
+    <string name="label_power">Power:</string>
+    <string name="label_cadence">Cadence:</string>
+    <string name="label_ground_time">Ground time:</string>
+    <string name="value_power">%.2f W</string>
+    <string name="value_cadence">%.2f spm</string>
+    <string name="value_ground_time">%.2f ms</string>
+    <string name="not_implemented_placeholder">Not implemented</string>
+    <string name="record_button">Record</string>
+    <string name="pause_button">Pause</string>
+    <string name="continue_recording_button">Continue</string>
+    <string name="stop_recording_button">Stop</string>
+    <string name="stop_message">The session is being saved</string>
+    <string name="saved_message">The session has been saved</string>
 </resources>
