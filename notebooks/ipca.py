@@ -36,8 +36,7 @@ class IncrementalPCA:
             x = np.reshape(X[n], (1,-1))
             self._update_mean(x, n)
             x_centered = x - self.mean
-            xhat = x_centered / np.linalg.norm(x_centered)
-            self.A = (self.A + (np.linalg.norm(x_centered) ** 2) * np.dot(xhat.T, xhat)) * n / (n + 1)
+            self.A = (n - 1) / n * self.A + np.dot(x_centered.T, x_centered) / (n ** 2)
             
             self._update_eigen()
             X_out = np.vstack([X_out, self._get_transformed(x_centered)])

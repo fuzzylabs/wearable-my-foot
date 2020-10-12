@@ -41,6 +41,7 @@ dependencies {
     implementation "androidx.constraintlayout:constraintlayout:2.0.1"
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
     implementation 'androidx.multidex:multidex:2.0.1'
+    implementation 'ai.fuzzylabs:incrementalpca:1.0-SNAPSHOT'
     implementation ('com.github.psambit9791:jdsp:0.4.0') {
         exclude group: 'org.apache.maven.surefire', module: 'common-java'
         exclude group: 'org.apache.maven.surefire', module: 'surefire-api'

@@ -25,8 +25,13 @@ class IMUReading constructor(
     private val aZ: Float,
     private val gX: Float,
     private val gY: Float,
-    private val gZ: Float
+    private val gZ: Float,
 ) {
+
+    private var pc0: Double = 0.0
+    private var pc1: Double = 0.0
+    private var pc2: Double = 0.0
+
     override fun toString(): String {
         return "${time}\n${aX}\n${aY}\n${aZ}\n${gX}\n${gY}\n${gZ}"
     }
@@ -37,7 +42,37 @@ class IMUReading constructor(
      * @return String to be used on CSV export
      */
     fun toCSVRow(): String {
-        return "${time},${aX},${aY},${aZ},${gX},${gY},${gZ}\n"
+        return "${time},${aX},${aY},${aZ},${gX},${gY},${gZ},${pc0},${pc1},${pc2}\n"
+    }
+
+    /**
+     * @return Time of the reading in ms from the start of the Arduino device
+     */
+    fun getTime(): UInt {
+        return time;
+    }
+
+    /**
+     * Get acceleration vector (in m/s^2)
+     *
+     * @return DoubleArray of acceleration in m/s^2 (+X, +Y, +Z)
+     */
+    fun getAcceleration(): DoubleArray {
+        return doubleArrayOf(aX.toDouble() * G, aY.toDouble() * G, aZ.toDouble() * G)
+    }
+
+    fun setPC(pc0: Double, pc1: Double, pc2: Double): IMUReading {
+        this.pc0 = pc0
+        this.pc1 = pc1
+        this.pc2 = pc2
+        return this
+    }
+
+    /**
+     * Get 0th PC of acceleration (in m/s^2)
+     */
+    fun getPC0(): Double {
+        return pc0
     }
 
     companion object {
@@ -68,21 +103,5 @@ class IMUReading constructor(
         fun zero(): IMUReading {
             return IMUReading(0u,0F,0F,0F,0F,0F,0F)
         }
-    }
-
-    /**
-     * @return Time of the reading in ms from the start of the Arduino device
-     */
-    fun getTime(): UInt {
-        return time;
-    }
-
-    /**
-     * Get acceleration vector (in m/s^2)
-     *
-     * @return DoubleArray of acceleration in m/s^2 (+X, +Y, +Z)
-     */
-    fun getAcceleration(): DoubleArray {
-        return doubleArrayOf(aX.toDouble() * G, aY.toDouble() * G, aZ.toDouble() * G)
     }
 }

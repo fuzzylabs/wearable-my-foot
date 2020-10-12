@@ -7,6 +7,8 @@ import kotlinx.coroutines.Dispatchers
 import java.time.Instant
 import kotlin.math.floor
 import kotlin.math.max
+import ai.fuzzylabs.incrementalpca.IncrementalPCA
+import android.util.Log
 
 @ExperimentalUnsignedTypes
 private val TAG = IMUSession::class.java.simpleName
@@ -22,9 +24,11 @@ private val TAG = IMUSession::class.java.simpleName
  * @property[elements] List of [IMUSessionElement] calculated during a session
  */
 @ExperimentalUnsignedTypes
-class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000){
+class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000){
+    internal var ipca: IncrementalPCA = IncrementalPCA(3,3)
+    private var ipcaInitialized: Boolean = false
     private val windowSize = windowSizeMillis / (1000 / samplingFrequency)
-    private var window: MutableList<IMUReading> = MutableList(windowSize) {IMUReading.zero()}
+    private var window: MutableList<IMUReading> = mutableListOf()
     var currentElement: IMUSessionElement = IMUSessionElement(Instant.now(), getWindowCadence())
     var readings: MutableList<IMUReading> = mutableListOf()
     var elements: MutableList<IMUSessionElement> = mutableListOf()
@@ -34,9 +38,21 @@ class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000
      *
      * @param[reading] Reading to be added
      */
-    fun shiftWindow(reading: IMUReading) {
-        window = window.drop(1).toMutableList();
-        window.add(reading)
+    fun shiftWindow(reading: IMUReading, isRecording: Boolean) {
+        // Wait for enough readings for PCA initialisation
+        if(!ipcaInitialized) {
+            window.add(reading)
+            if(window.size == pcaInitialSize) {
+                initializePCA()
+                ipcaInitialized = true
+            }
+        } else {
+            val pc = ipca.update(reading.getAcceleration())
+            reading.setPC(pc[0], pc[1], pc[2])
+            if(window.size >= windowSize) window = window.drop(1).toMutableList()
+            window.add(reading)
+            if(isRecording) addReading(reading)
+        }
     }
 
     /**
@@ -44,8 +60,16 @@ class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000
      *
      * @param[reading] Reading to be added
      */
-    fun addReading(reading: IMUReading) {
+    private fun addReading(reading: IMUReading) {
         readings.add(reading)
+    }
+
+    private fun initializePCA() {
+        val accelerationArray = window.map { it.getAcceleration() }.toTypedArray()
+        val pcs = ipca.initialize(accelerationArray)
+        window = window.zip(pcs)
+            .map { (reading, pc) -> reading.setPC(pc[0], pc[1], pc[2]) }
+            .toMutableList()
     }
 
     /**
@@ -54,58 +78,27 @@ class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000
      * Makes [readings] and [elements] lists empty
      */
     fun clear() {
+        window = mutableListOf()
         readings = mutableListOf()
         elements = mutableListOf()
+        ipca = IncrementalPCA(3,3)
+        ipcaInitialized = false
     }
 
     fun updateWindowMetrics(isRecording: Boolean) {
         val cadence = getWindowCadence()
         currentElement = IMUSessionElement(Instant.now(), cadence)
+        Log.d(TAG, "Metrics updated: $currentElement")
         if(isRecording) elements.add(currentElement)
     }
 
-    /**
-     * Recalculate the running session
-     *
-     * Recalculates all elements of a session (to mitigate the limitation of local PCA)
-     */
-    fun recalculateElements(startTime: Instant) {
-        val startMillis = readings.first().getTime()
-        val endMillis = readings.last().getTime()
-        val stepMillis: Int = 1000
-        val pca0 = getFirstPrincipleComponent(readings)
-        val times = readings.map { it.getTime() }
 
-        // Get the sequence of time windows to perform calculation on
-        val timeSequence = ((startMillis + stepMillis.toUInt())..(endMillis + windowSizeMillis.toUInt())).step(stepMillis)
-
-        // Get reading (pca0) windows to perform calculations on
-        val windowSequence = sequence<DoubleArray> {
-            for (time in timeSequence) {
-                yield(pca0.zip(times)
-                    .filter { it.second >= time - windowSizeMillis.toUInt() && it.second <= time }
-                    .unzip().first.toDoubleArray())
-            }
-        }
-
-        val elements = sequence<IMUSessionElement> {
-            for ((time, window) in (timeSequence.asIterable()).zip(windowSequence.asIterable())) {
-                val cadence = getWindowCadencePreprocessed(window)
-                val realTime = startTime.plusMillis((time - startMillis).toLong())
-                yield(IMUSessionElement(realTime, cadence))
-            }
-
-        }.toMutableList()
-
-        this.elements = elements
-
-    }
 
     /**
      * Get ByteArray representation of the window for visualisation
      */
     fun getVisualisationBytes(): ByteArray {
-        val pc = getFirstPrincipleComponent(window)
+        val pc = window.map { it.getPC0() }
         val minAcceleration = -16.0 * 9.8
         val maxAcceleration = +16.0 * 9.8
         return pc.map {
@@ -127,7 +120,7 @@ class IMUSession(samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000
      * @param[_window] An iterable of raw [IMUReading]s
      */
     private fun getWindowCadence(_window: Iterable<IMUReading>): Double {
-        return getWindowCadencePreprocessed(getFirstPrincipleComponent(_window))
+        return getWindowCadencePreprocessed(_window.map { it.getPC0() }.toDoubleArray())
     }
 
     /**

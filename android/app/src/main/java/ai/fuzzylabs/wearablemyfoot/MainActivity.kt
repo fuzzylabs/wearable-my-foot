@@ -88,6 +88,8 @@ class MainActivity : AppCompatActivity() {
         val sessionBroadcastFilter = IntentFilter()
         sessionBroadcastFilter.addAction(IMUSessionService.METRICS_UPDATED_ACTION)
         sessionBroadcastFilter.addAction(IMUSessionService.SAVED_ACTION)
+        sessionBroadcastFilter.addAction(IMUSessionService.VISUALISATION_UPDATED_ACTION)
+        sessionBroadcastFilter.addAction(IMUSessionService.DEBUG_ACTION)
         registerReceiver(imuSessionUpdateReceiver, sessionBroadcastFilter)
 
         val sessionServiceIntent = Intent(this, IMUSessionService::class.java)
@@ -99,16 +101,6 @@ class MainActivity : AppCompatActivity() {
         Log.d("Session Binding", sessionBound.toString())
 
         updateView()
-
-        val handler = Handler()
-        val testVis = object: Runnable {
-            override fun run() {
-                val ba = sessionService?.getBytes()
-                visualiser.setRawAudioBytes(ba)
-                handler.postDelayed(this, 100)
-            }
-        }
-        handler.post(testVis)
     }
 
     override fun onDestroy() {
@@ -120,7 +112,7 @@ class MainActivity : AppCompatActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 IMUSessionService.METRICS_UPDATED_ACTION -> {
-                    val cadence = sessionService?.getCurrentCadence()
+                    val cadence = intent.getDoubleExtra(IMUSessionService.CADENCE_DOUBLE, 0.0)
                     Log.d(TAG, "Cadence: $cadence")
                     cadenceTextView.text = getString(R.string.value_cadence, cadence)
                 }
@@ -128,6 +120,17 @@ class MainActivity : AppCompatActivity() {
                     state = STATE_CONNECTED
                     Toast.makeText(applicationContext, getString(R.string.saved_message), Toast.LENGTH_SHORT).show()
                     updateView()
+                }
+                IMUSessionService.VISUALISATION_UPDATED_ACTION -> {
+                    val bytes = intent.getByteArrayExtra(IMUSessionService.VISUALISATION_BYTEARRAY)
+                    if(bytes != null) {
+                        if(bytes.size < 1000){
+                            val paddedBytes = byteArrayOf(*ByteArray(1000 - bytes.size) {127}, *bytes)
+                            visualiser.setRawAudioBytes(paddedBytes)
+                        } else {
+                            visualiser.setRawAudioBytes(bytes)
+                        }
+                    }
                 }
             }
         }
@@ -149,7 +152,7 @@ class MainActivity : AppCompatActivity() {
                     sessionService?.reset()
                 }
                 BluetoothLeService.ACTION_GATT_DISCONNECTED -> {
-                    finish()
+//                    finish()
                 }
                 BluetoothLeService.ACTION_DATA_AVAILABLE -> {
                     val imuReading =
