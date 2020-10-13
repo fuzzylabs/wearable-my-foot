@@ -8,7 +8,6 @@ import java.time.Instant
 import kotlin.math.floor
 import kotlin.math.max
 import ai.fuzzylabs.incrementalpca.IncrementalPCA
-import android.util.Log
 
 @ExperimentalUnsignedTypes
 private val TAG = IMUSession::class.java.simpleName
@@ -25,11 +24,11 @@ private val TAG = IMUSession::class.java.simpleName
  */
 @ExperimentalUnsignedTypes
 class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val windowSizeMillis: Int = 10000){
-    internal var ipca: IncrementalPCA = IncrementalPCA(3,3)
+    private var ipca: IncrementalPCA = IncrementalPCA(3,3)
     private var ipcaInitialized: Boolean = false
     private val windowSize = windowSizeMillis / (1000 / samplingFrequency)
     private var window: MutableList<IMUReading> = mutableListOf()
-    var currentElement: IMUSessionElement = IMUSessionElement(Instant.now(), getWindowCadence())
+    var currentElement: IMUSessionElement = IMUSessionElement(Instant.now(), 0.0)
     var readings: MutableList<IMUReading> = mutableListOf()
     var elements: MutableList<IMUSessionElement> = mutableListOf()
 
@@ -86,13 +85,12 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
     }
 
     fun updateWindowMetrics(isRecording: Boolean) {
-        val cadence = getWindowCadence()
-        currentElement = IMUSessionElement(Instant.now(), cadence)
-        Log.d(TAG, "Metrics updated: $currentElement")
+        currentElement = getWindowMetrics()
         if(isRecording) elements.add(currentElement)
     }
 
-
+    private fun getWindowMetrics(): IMUSessionElement =
+        Companion.getWindowMetrics(window)
 
     /**
      * Get ByteArray representation of the window for visualisation
@@ -106,34 +104,26 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
         }.toByteArray()
     }
 
-    private fun getWindowStepCount(_window: DoubleArray): Int {
-        return countSteps(_window)
-    }
-
-    private fun getWindowCadence(): Double {
-        return getWindowCadence(window)
-    }
-
-    /**
-     * Get cadence for a window of raw readings
-     *
-     * @param[_window] An iterable of raw [IMUReading]s
-     */
-    private fun getWindowCadence(_window: Iterable<IMUReading>): Double {
-        return getWindowCadencePreprocessed(_window.map { it.getPC0() }.toDoubleArray())
-    }
-
-    /**
-     * Get cadence for a window of preprocessed readings
-     *
-     * @param[_window] Array of preprocessed acceleration values, e.g. with PCA
-     * @see[getFirstPrincipleComponent]
-     */
-    private fun getWindowCadencePreprocessed(_window: DoubleArray): Double {
-        return getWindowStepCount(_window).toDouble() / windowSizeMillis.toDouble() * 60000.0
-    }
-
     companion object {
+        fun getWindowMetrics(window: Iterable<IMUReading>): IMUSessionElement {
+            val pca0 = window.map { it.getPC0() }.toDoubleArray()
+            val deltaTime = window.last().getTime() - window.first().getTime()
+            val stepPeaks = findStepPeaks(pca0)
+            val cadence = getWindowCadence(stepPeaks, deltaTime.toInt())
+            return IMUSessionElement(Instant.now(), cadence)
+        }
+
+        /**
+         * Get cadence for a window
+         *
+         * @param[pca0] Iterable of peaks corresponding to steps
+         * @param[deltaTime] Size of the window in milliseconds
+         * @see[getFirstPrincipleComponent]
+         */
+        private fun getWindowCadence(stepPeaks: IntArray, deltaTime: Int): Double {
+            return stepPeaks.size / deltaTime.toDouble() * 60000.0
+        }
+
         /**
          * Perform PCA and get first Principle Component
          *
@@ -147,36 +137,33 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
         }
 
         /**
-         * Count steps using peak detection
+         * Finds peaks in a signal that correspond to individual steps
          *
          * Implements peak detection step counting. A step is counted if it exceeds
-         * positive or negative 35.0 m/s^2
+         * 35.0 m/s^2. Enforces distance between peaks of 20 samples
          *
          * @param[pca0] Input array, the first principle component is assumed
+         * @return Iterable<Int> with indices of the original array corresponding to peaks
          */
-        fun countSteps(pca0: DoubleArray): Int {
-            with(Dispatchers.Default){
-
-                val fp = FindPeak(pca0)
-                var outPeaks: Peak? = null
-                try {
-                    outPeaks = fp.detectPeaks()
-                } catch (e: NegativeArraySizeException) {
-                    // Zero peaks found and the jDSP throws exceptions
-                }
-                val noPeaks: Int =  outPeaks?.filterByHeight(35.0, 200.0)?.size ?: 0
-
-                var outTroughs: Peak? = null
-                try {
-                    outTroughs = fp.detectTroughs()
-                } catch (e: NegativeArraySizeException) {
-                    // Zero peaks found and the jDSP throws exceptions
-                }
-                val noTroughs =  outTroughs?.filterByHeight(35.0, 200.0)?.size ?: 0
-
-                return max(noPeaks, noTroughs)
+        private fun findStepPeaks(pca0: DoubleArray): IntArray {
+            val fp = FindPeak(pca0)
+            var outPeaks: Peak? = null
+            try {
+                outPeaks = fp.detectPeaks()
+            } catch (e: NegativeArraySizeException) {
+                // Zero peaks found and the jDSP throws exceptions
             }
 
+            // Order is important! Until jDSP provides a method for filtering by multiple
+            // properties filtering by distance needs to be performed first, so not to recreate
+            // peak priorities
+            val peaksByDistance = outPeaks?.filterByPeakDistance(20) ?: intArrayOf()
+            val peakHeights = outPeaks?.findPeakHeights(peaksByDistance) ?: doubleArrayOf()
+
+            return peaksByDistance.zip(peakHeights.asIterable())
+                .filter { it.second >= 50.0 }
+                .map { it.first }
+                .toIntArray()
         }
     }
 }
