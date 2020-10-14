@@ -8,6 +8,8 @@ import java.time.Instant
 import kotlin.math.floor
 import kotlin.math.max
 import ai.fuzzylabs.incrementalpca.IncrementalPCA
+import ai.fuzzylabs.wearablemyfoot.math.cumtrapz
+import kotlin.math.absoluteValue
 
 @ExperimentalUnsignedTypes
 private val TAG = IMUSession::class.java.simpleName
@@ -28,7 +30,7 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
     private var ipcaInitialized: Boolean = false
     private val windowSize = windowSizeMillis / (1000 / samplingFrequency)
     private var window: MutableList<IMUReading> = mutableListOf()
-    var currentElement: IMUSessionElement = IMUSessionElement(Instant.now(), 0.0)
+    var currentElement: IMUSessionElement = IMUSessionElement(Instant.now(), 0.0, 0.0)
     var readings: MutableList<IMUReading> = mutableListOf()
     var elements: MutableList<IMUSessionElement> = mutableListOf()
 
@@ -105,20 +107,51 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
     }
 
     companion object {
+        /**
+         * Calculates running metrics for a given window of readings
+         *
+         * @param[window] Iterable of readings, window to perform calculations on
+         * @return IMUSessionElement containing current time and calculated metrics
+         */
         fun getWindowMetrics(window: Iterable<IMUReading>): IMUSessionElement {
             val pca0 = window.map { it.getPC0() }.toDoubleArray()
+            val startTime = window.first().getTime()
+            val time = window.map { (it.getTime() - startTime).toDouble() / 1000 }
             val deltaTime = window.last().getTime() - window.first().getTime()
+
             val stepPeaks = findStepPeaks(pca0)
             val cadence = getWindowCadence(stepPeaks, deltaTime.toInt())
-            return IMUSessionElement(Instant.now(), cadence)
+            val speed = getSpeed(pca0, stepPeaks, time)
+
+            return IMUSessionElement(Instant.now(), cadence, speed)
+        }
+
+        /**
+         * Get estimated speed for a windom
+         *
+         * @param[pca0] Input array, the first principle component is assumed
+         * @param[stepPeaks] Iterable of peaks corresponding to steps
+         * @param[time] Relative time for each reading
+         * @return Speed in m/s^2
+         */
+        private fun getSpeed(pca0: DoubleArray, stepPeaks: IntArray, time: List<Double>): Double {
+            val midpoints = listOf(0, *stepPeaks.toTypedArray(), pca0.size - 1)
+                .zipWithNext()
+                .map { (it.first + it.second) / 2 }
+            val speedValues = midpoints.zipWithNext()
+                .map { (a, b) -> getStepSpeed(pca0.slice(a..b), time.slice(a..b)) }
+            return speedValues.sum() / speedValues.size
+        }
+
+        private fun getStepSpeed(stepWindow: Iterable<Double>, time: Iterable<Double>): Double {
+            return cumtrapz(stepWindow, time).map { it.absoluteValue }.maxOrNull() ?: 0.0
         }
 
         /**
          * Get cadence for a window
          *
-         * @param[pca0] Iterable of peaks corresponding to steps
+         * @param[stepPeaks] Iterable of peaks corresponding to steps
          * @param[deltaTime] Size of the window in milliseconds
-         * @see[getFirstPrincipleComponent]
          */
         private fun getWindowCadence(stepPeaks: IntArray, deltaTime: Int): Double {
             return stepPeaks.size / deltaTime.toDouble() * 60000.0

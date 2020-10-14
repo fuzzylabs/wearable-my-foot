@@ -12,6 +12,9 @@ internal class IMUSessionTest {
         assert((session.currentElement.cadence - 85.0).absoluteValue < 10.0) {
             "Cadence expected 85.0 (+-10) but was ${session.currentElement.cadence}"
         }
+        assert((session.currentElement.speed - 4.0).absoluteValue < 0.5) {
+            "Speed expected 4.0 (+-0.5) m/s but was ${session.currentElement.speed}"
+        }
     }
 
     companion object {
