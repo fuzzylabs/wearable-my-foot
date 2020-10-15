@@ -2,7 +2,6 @@ package ai.fuzzylabs.wearablemyfoot.imu
 
 import com.github.psambit9791.jdsp.signal.peaks.FindPeak
 import com.github.psambit9791.jdsp.signal.peaks.Peak
-import com.github.psambit9791.jdsp.transform.PCA
 import java.time.Instant
 import kotlin.math.floor
 import ai.fuzzylabs.incrementalpca.IncrementalPCA
@@ -28,7 +27,12 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
     private var ipcaInitialized: Boolean = false
     private val windowSize = windowSizeMillis / (1000 / samplingFrequency)
     private var window: MutableList<IMUReading> = mutableListOf()
-    var currentElement: IMUSessionElement = IMUSessionElement(Instant.now(), 0.0, 0.0)
+    var currentElement: IMUSessionElement = IMUSessionElement(
+        Instant.now(),
+        0.0,
+        0.0,
+        0.0
+    )
     var readings: MutableList<IMUReading> = mutableListOf()
     var elements: MutableList<IMUSessionElement> = mutableListOf()
 
@@ -84,13 +88,13 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
         ipcaInitialized = false
     }
 
-    fun updateWindowMetrics(isRecording: Boolean) {
-        currentElement = getWindowMetrics()
+    fun updateWindowMetrics(noNewReadings: Int, isRecording: Boolean) {
+        currentElement = getWindowMetrics(noNewReadings)
         if(isRecording) elements.add(currentElement)
     }
 
-    private fun getWindowMetrics(): IMUSessionElement =
-        Companion.getWindowMetrics(window)
+    private fun getWindowMetrics(noNewReadings: Int): IMUSessionElement =
+        Companion.getWindowMetrics(window, noNewReadings, currentElement.distance)
 
     /**
      * Get ByteArray representation of the window for visualisation
@@ -109,19 +113,24 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
          * Calculates running metrics for a given window of readings
          *
          * @param[window] Iterable of readings, window to perform calculations on
+         * @param[noNewReadings] Number of new readings since the last update
+         * @param[lastDistance] Distance estimate from the previous calculation
          * @return IMUSessionElement containing current time and calculated metrics
          */
-        fun getWindowMetrics(window: Iterable<IMUReading>): IMUSessionElement {
+        fun getWindowMetrics(window: Iterable<IMUReading>, noNewReadings: Int, lastDistance: Double): IMUSessionElement {
             val pca0 = window.map { it.getPC0() }.toDoubleArray()
             val startTime = window.first().getTime()
             val time = window.map { (it.getTime() - startTime).toDouble() / 1000 }
-            val deltaTime = window.last().getTime() - window.first().getTime()
+            val windowDeltaTime = window.last().getTime() - window.first().getTime()
+            val newReadings = window.toList().takeLast(noNewReadings)
+            val newDeltaTime = newReadings.last().getTime() - newReadings.first().getTime()
 
             val stepPeaks = findStepPeaks(pca0)
-            val cadence = getWindowCadence(stepPeaks, deltaTime.toInt())
+            val cadence = getWindowCadence(stepPeaks, windowDeltaTime.toInt())
             val speed = getSpeed(pca0, stepPeaks, time)
+            val distance = lastDistance + speed * (newDeltaTime.toDouble() / 1000)
 
-            return IMUSessionElement(Instant.now(), cadence, speed)
+            return IMUSessionElement(Instant.now(), cadence, speed, distance)
         }
 
         /**

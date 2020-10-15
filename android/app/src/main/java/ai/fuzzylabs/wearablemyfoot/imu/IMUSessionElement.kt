@@ -11,8 +11,10 @@ import kotlin.math.roundToInt
  *
  * @property[time] Instance of time
  * @property[cadence] Calculated cadence at this time point
+ * @property[speed] Speed in m/s
+ * @property[distance] Distance in meters
  */
-class IMUSessionElement(val time: Instant, val cadence: Double, val speed: Double) {
+class IMUSessionElement(val time: Instant, val cadence: Double, val speed: Double, val distance: Double) {
     /**
      * Populate GPX with calculated fields
      *

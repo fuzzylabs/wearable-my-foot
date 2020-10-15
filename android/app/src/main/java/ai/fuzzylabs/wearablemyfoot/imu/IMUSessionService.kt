@@ -136,12 +136,18 @@ class IMUSessionService : Service() {
      */
     fun getCurrentSpeed(): Double = session.currentElement.speed * 3.6
 
+    /**
+     * Get current distance run in meters
+     */
+    fun getCurrentDistance(): Double = session.currentElement.distance
+
     private fun updateWindowMetrics() {
-        session.updateWindowMetrics(state == RECORDING_STATE)
+        session.updateWindowMetrics(windowCounter, state == RECORDING_STATE)
 
         val intent = Intent(METRICS_UPDATED_ACTION)
         intent.putExtra(CADENCE_DOUBLE, getCurrentCadence())
         intent.putExtra(SPEED_DOUBLE, getCurrentSpeed())
+        intent.putExtra(DISTANCE_DOUBLE, getCurrentDistance())
         sendBroadcast(intent)
 
         windowCounter = 0
@@ -254,5 +260,6 @@ class IMUSessionService : Service() {
         const val DEBUG_STRING = "ai.fuzzylabs.insoleandroud.imu.DEBUG_STRING"
         const val CADENCE_DOUBLE = "ai.fuzzylabs.insoleandroud.imu.CADENCE_DOUBLE"
         const val SPEED_DOUBLE = "ai.fuzzylabs.insoleandroud.imu.SPEED_DOUBLE"
+        const val DISTANCE_DOUBLE = "ai.fuzzylabs.insoleandroud.imu.DISTANCE_DOUBLE"
     }
 }

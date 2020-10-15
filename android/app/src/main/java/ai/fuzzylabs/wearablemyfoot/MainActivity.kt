@@ -34,6 +34,8 @@ class MainActivity : AppCompatActivity() {
 
     private val cadenceTextView: TextView by lazy { findViewById(R.id.cadenceTextView) }
     private val speedTextView: TextView by lazy { findViewById(R.id.speedTextView) }
+    private val distanceTextView: TextView by lazy { findViewById(R.id.distanceTextView) }
+
     private val recordButton: Button by lazy { findViewById(R.id.recordButton) }
     private val stopButton: Button by lazy { findViewById(R.id.stopButton) }
     private val continueButton: Button by lazy { findViewById(R.id.continueButton) }
@@ -49,6 +51,7 @@ class MainActivity : AppCompatActivity() {
             sessionService = (binder as IMUSessionService.LocalBinder).service
             cadenceTextView.text = getString(R.string.value_cadence, sessionService?.getCurrentCadence())
             speedTextView.text = getString(R.string.value_speed, sessionService?.getCurrentSpeed())
+            distanceTextView.text = getString(R.string.value_distance, sessionService?.getCurrentDistance())
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
@@ -118,8 +121,10 @@ class MainActivity : AppCompatActivity() {
                 IMUSessionService.METRICS_UPDATED_ACTION -> {
                     val cadence = intent.getDoubleExtra(IMUSessionService.CADENCE_DOUBLE, 0.0)
                     val speed = intent.getDoubleExtra(IMUSessionService.SPEED_DOUBLE, 0.0)
+                    val distance = intent.getDoubleExtra(IMUSessionService.DISTANCE_DOUBLE, 0.0)
                     cadenceTextView.text = getString(R.string.value_cadence, cadence)
                     speedTextView.text = getString(R.string.value_speed, speed)
+                    distanceTextView.text = getString(R.string.value_distance, distance)
                 }
                 IMUSessionService.SAVED_ACTION -> {
                     state = STATE_CONNECTED
