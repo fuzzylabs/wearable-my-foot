@@ -3,10 +3,8 @@ package ai.fuzzylabs.wearablemyfoot.imu
 import com.github.psambit9791.jdsp.signal.peaks.FindPeak
 import com.github.psambit9791.jdsp.signal.peaks.Peak
 import com.github.psambit9791.jdsp.transform.PCA
-import kotlinx.coroutines.Dispatchers
 import java.time.Instant
 import kotlin.math.floor
-import kotlin.math.max
 import ai.fuzzylabs.incrementalpca.IncrementalPCA
 import ai.fuzzylabs.wearablemyfoot.math.cumtrapz
 import kotlin.math.absoluteValue
@@ -140,7 +138,8 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
                 .map { (it.first + it.second) / 2 }
             val speedValues = midpoints.zipWithNext()
                 .map { (a, b) -> getStepSpeed(pca0.slice(a..b), time.slice(a..b)) }
-            return speedValues.sum() / speedValues.size
+
+            return if (speedValues.isEmpty()) 0.0 else speedValues.sum() / speedValues.size
         }
 
         private fun getStepSpeed(stepWindow: Iterable<Double>, time: Iterable<Double>): Double {
@@ -155,18 +154,6 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
          */
         private fun getWindowCadence(stepPeaks: IntArray, deltaTime: Int): Double {
             return stepPeaks.size / deltaTime.toDouble() * 60000.0
-        }
-
-        /**
-         * Perform PCA and get first Principle Component
-         *
-         * @param[readings] Collection of raw [IMUReading]s
-         */
-        private fun getFirstPrincipleComponent(readings: Iterable<IMUReading>): DoubleArray {
-            val acceleration = readings.map { it.getAcceleration() }
-            val pca = PCA(acceleration.toTypedArray(), 3)
-            pca.fit()
-            return pca.transform().map { it.component1() }.toDoubleArray()
         }
 
         /**

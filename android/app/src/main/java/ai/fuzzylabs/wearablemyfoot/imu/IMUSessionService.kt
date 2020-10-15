@@ -7,6 +7,8 @@ import android.os.IBinder
 import android.util.Log
 import android.util.Xml
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.*
 import java.time.Instant
 
@@ -20,6 +22,8 @@ private val TAG = IMUSessionService::class.java.simpleName
  */
 @ExperimentalUnsignedTypes
 class IMUSessionService : Service() {
+
+    private val mutex = Mutex()
 
     inner class LocalBinder : Binder() {
         val service: IMUSessionService
@@ -48,14 +52,18 @@ class IMUSessionService : Service() {
 
      * window, and/or calculate running metrics from the window
      */
-    fun addReading(reading: IMUReading) {
+    suspend fun addReading(reading: IMUReading) {
         if (state == CONNECTED_STATE || state == RECORDING_STATE) {
-            session.shiftWindow(reading, state == RECORDING_STATE)
+            mutex.withLock {
+                session.shiftWindow(reading, state == RECORDING_STATE)
+            }
             windowCounter++
             visualisationUpdateCounter++
         }
         if (visualisationUpdateCounter >= visualisationUpdateStep) {
-            updateVisialisation()
+            mutex.withLock {
+                updateVisialisation()
+            }
         }
 
         if (windowCounter >= windowStep) {
@@ -64,7 +72,9 @@ class IMUSessionService : Service() {
             }
             // Potentially CPU intensive task, launch in a coroutine
             updateWindowMetricsJob = GlobalScope.launch {
-                updateWindowMetrics()
+                mutex.withLock {
+                    updateWindowMetrics()
+                }
             }
         }
     }
@@ -121,11 +131,17 @@ class IMUSessionService : Service() {
      */
     fun getCurrentCadence(): Double = session.currentElement.cadence
 
+    /**
+     * Get current speed in kmh
+     */
+    fun getCurrentSpeed(): Double = session.currentElement.speed * 3.6
+
     private fun updateWindowMetrics() {
         session.updateWindowMetrics(state == RECORDING_STATE)
 
         val intent = Intent(METRICS_UPDATED_ACTION)
         intent.putExtra(CADENCE_DOUBLE, getCurrentCadence())
+        intent.putExtra(SPEED_DOUBLE, getCurrentSpeed())
         sendBroadcast(intent)
 
         windowCounter = 0
@@ -237,5 +253,6 @@ class IMUSessionService : Service() {
         const val DEBUG_ACTION = "ai.fuzzylabs.insoleandroud.imu.DEBUG_ACTION"
         const val DEBUG_STRING = "ai.fuzzylabs.insoleandroud.imu.DEBUG_STRING"
         const val CADENCE_DOUBLE = "ai.fuzzylabs.insoleandroud.imu.CADENCE_DOUBLE"
+        const val SPEED_DOUBLE = "ai.fuzzylabs.insoleandroud.imu.SPEED_DOUBLE"
     }
 }

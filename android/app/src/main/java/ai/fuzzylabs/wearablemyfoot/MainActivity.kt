@@ -5,7 +5,7 @@ import ai.fuzzylabs.wearablemyfoot.imu.IMUSessionService
 import android.content.*
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
+import kotlinx.coroutines.launch
 import android.os.IBinder
 import android.util.Log
 import android.view.View
@@ -16,6 +16,8 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.gauravk.audiovisualizer.visualizer.HiFiVisualizer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 
 private val TAG = MainActivity::class.java.simpleName
@@ -31,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     private var state: String = STATE_CONNECTED
 
     private val cadenceTextView: TextView by lazy { findViewById(R.id.cadenceTextView) }
+    private val speedTextView: TextView by lazy { findViewById(R.id.speedTextView) }
     private val recordButton: Button by lazy { findViewById(R.id.recordButton) }
     private val stopButton: Button by lazy { findViewById(R.id.stopButton) }
     private val continueButton: Button by lazy { findViewById(R.id.continueButton) }
@@ -45,6 +48,7 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, "IMUSessionService Connected")
             sessionService = (binder as IMUSessionService.LocalBinder).service
             cadenceTextView.text = getString(R.string.value_cadence, sessionService?.getCurrentCadence())
+            speedTextView.text = getString(R.string.value_speed, sessionService?.getCurrentSpeed())
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
@@ -113,8 +117,9 @@ class MainActivity : AppCompatActivity() {
             when (intent.action) {
                 IMUSessionService.METRICS_UPDATED_ACTION -> {
                     val cadence = intent.getDoubleExtra(IMUSessionService.CADENCE_DOUBLE, 0.0)
-                    Log.d(TAG, "Cadence: $cadence")
+                    val speed = intent.getDoubleExtra(IMUSessionService.SPEED_DOUBLE, 0.0)
                     cadenceTextView.text = getString(R.string.value_cadence, cadence)
+                    speedTextView.text = getString(R.string.value_speed, speed)
                 }
                 IMUSessionService.SAVED_ACTION -> {
                     state = STATE_CONNECTED
@@ -158,7 +163,11 @@ class MainActivity : AppCompatActivity() {
                     val imuReading =
                         IMUReading.fromByteArray(intent.getByteArrayExtra("IMU_BYTEARRAY"))
                     if (imuReading != null) {
-                        sessionService?.addReading(imuReading)
+                        runBlocking {
+                            launch(Dispatchers.Default) {
+                                sessionService?.addReading(imuReading)
+                            }
+                        }
                     }
                 }
             }
