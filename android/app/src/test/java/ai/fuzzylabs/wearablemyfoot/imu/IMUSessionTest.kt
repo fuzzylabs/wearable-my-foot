@@ -15,6 +15,14 @@ internal class IMUSessionTest {
         assert((session.currentElement.speed - 4.0).absoluteValue < 0.5) {
             "Speed expected 4.0 (+-0.5) m/s but was ${session.currentElement.speed}"
         }
+        assert(session.currentElement.distance == 0.0) {
+            "Distance must not be updated when not recording"
+        }
+
+        session.updateWindowMetrics(1000, isRecording = true)
+        assert((session.currentElement.distance - 45.0).absoluteValue < 7.0) {
+            "Distance expected 45.0 (+-7.0) m/s but was ${session.currentElement.distance}"
+        }
     }
 
     companion object {
@@ -25,7 +33,7 @@ internal class IMUSessionTest {
         fun setUp() {
             val reader = this::class.java.classLoader?.getResourceAsStream("test-run.csv")?.reader()?.readLines()
             // stop at record 4000, that aligns to the desired window for calculations
-            val imuReadings = reader!!.drop(1).take(3999).map { readingFromCSVString(it) }
+            val imuReadings = reader!!.drop(1).take(4000).map { readingFromCSVString(it) }
             imuReadings.forEach { session.shiftWindow(it, false) }
         }
 

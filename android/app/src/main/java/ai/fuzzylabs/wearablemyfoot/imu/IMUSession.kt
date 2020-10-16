@@ -89,12 +89,12 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
     }
 
     fun updateWindowMetrics(noNewReadings: Int, isRecording: Boolean) {
-        currentElement = getWindowMetrics(noNewReadings)
+        currentElement = getWindowMetrics(noNewReadings, updateDistance = isRecording)
         if(isRecording) elements.add(currentElement)
     }
 
-    private fun getWindowMetrics(noNewReadings: Int): IMUSessionElement =
-        Companion.getWindowMetrics(window, noNewReadings, currentElement.distance)
+    private fun getWindowMetrics(noNewReadings: Int, updateDistance: Boolean): IMUSessionElement =
+        Companion.getWindowMetrics(window, noNewReadings, currentElement.distance, updateDistance)
 
     /**
      * Get ByteArray representation of the window for visualisation
@@ -117,7 +117,12 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
          * @param[lastDistance] Distance estimate from the previous calculation
          * @return IMUSessionElement containing current time and calculated metrics
          */
-        fun getWindowMetrics(window: Iterable<IMUReading>, noNewReadings: Int, lastDistance: Double): IMUSessionElement {
+        fun getWindowMetrics(
+            window: Iterable<IMUReading>,
+            noNewReadings: Int,
+            lastDistance: Double,
+            updateDistance: Boolean
+        ): IMUSessionElement {
             val pca0 = window.map { it.getPC0() }.toDoubleArray()
             val startTime = window.first().getTime()
             val time = window.map { (it.getTime() - startTime).toDouble() / 1000 }
@@ -128,7 +133,8 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
             val stepPeaks = findStepPeaks(pca0)
             val cadence = getWindowCadence(stepPeaks, windowDeltaTime.toInt())
             val speed = getSpeed(pca0, stepPeaks, time)
-            val distance = lastDistance + speed * (newDeltaTime.toDouble() / 1000)
+            val distance =
+                if (updateDistance) lastDistance + speed * (newDeltaTime.toDouble() / 1000) else lastDistance
 
             return IMUSessionElement(Instant.now(), cadence, speed, distance)
         }
