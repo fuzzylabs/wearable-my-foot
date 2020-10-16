@@ -46,7 +46,7 @@
             android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/textView4"
+                android:id="@+id/cadenceHeading"
                 android:layout_width="104dp"
                 android:layout_height="wrap_content"
                 android:text="@string/label_cadence"
@@ -64,7 +64,7 @@
             android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/textView4"
+                android:id="@+id/speedHeading"
                 android:layout_width="104dp"
                 android:layout_height="wrap_content"
                 android:text="@string/label_speed"
@@ -82,7 +82,7 @@
             android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/textView4"
+                android:id="@+id/distanceHeading"
                 android:layout_width="104dp"
                 android:layout_height="wrap_content"
                 android:text="@string/label_distance"
@@ -100,7 +100,7 @@
             android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/textView4"
+                android:id="@+id/powerHeading"
                 android:layout_width="104dp"
                 android:layout_height="wrap_content"
                 android:text="@string/label_power"
@@ -119,7 +119,7 @@
             android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/textView4"
+                android:id="@+id/groundtimeHeading"
                 android:layout_width="104dp"
                 android:layout_height="wrap_content"
                 android:text="@string/label_ground_time"

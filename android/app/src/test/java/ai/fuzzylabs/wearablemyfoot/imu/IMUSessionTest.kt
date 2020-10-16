@@ -8,7 +8,7 @@ internal class IMUSessionTest {
 
     @Test
     fun updateWindowMetrics() {
-        session.updateWindowMetrics(isRecording = false)
+        session.updateWindowMetrics(1000, isRecording = false)
         assert((session.currentElement.cadence - 85.0).absoluteValue < 10.0) {
             "Cadence expected 85.0 (+-10) but was ${session.currentElement.cadence}"
         }
