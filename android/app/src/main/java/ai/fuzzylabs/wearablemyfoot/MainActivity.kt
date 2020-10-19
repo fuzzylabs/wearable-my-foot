@@ -162,7 +162,7 @@ class MainActivity : AppCompatActivity() {
                     sessionService?.reset()
                 }
                 BluetoothLeService.ACTION_GATT_DISCONNECTED -> {
-//                    finish()
+                    finish()
                 }
                 BluetoothLeService.ACTION_DATA_AVAILABLE -> {
                     val imuReading =

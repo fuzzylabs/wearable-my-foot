@@ -6,6 +6,7 @@ import java.time.Instant
 import kotlin.math.floor
 import ai.fuzzylabs.incrementalpca.IncrementalPCA
 import ai.fuzzylabs.wearablemyfoot.math.cumtrapz
+import ai.fuzzylabs.wearablemyfoot.util.DoubleVector3D
 import kotlin.math.absoluteValue
 
 @ExperimentalUnsignedTypes
@@ -51,7 +52,7 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
             }
         } else {
             val pc = ipca.update(reading.getAcceleration())
-            reading.setPC(pc[0], pc[1], pc[2])
+            reading.pc = DoubleVector3D(pc[0], pc[1], pc[2])
             if(window.size >= windowSize) window = window.drop(1).toMutableList()
             window.add(reading)
             if(isRecording) addReading(reading)
@@ -71,7 +72,7 @@ class IMUSession(val pcaInitialSize: Int = 50, samplingFrequency: Int = 100, val
         val accelerationArray = window.map { it.getAcceleration() }.toTypedArray()
         val pcs = ipca.initialize(accelerationArray)
         window = window.zip(pcs)
-            .map { (reading, pc) -> reading.setPC(pc[0], pc[1], pc[2]) }
+            .map { (reading, pc) -> reading.also { it.pc = DoubleVector3D(pc[0], pc[1], pc[2]) } }
             .toMutableList()
     }
 

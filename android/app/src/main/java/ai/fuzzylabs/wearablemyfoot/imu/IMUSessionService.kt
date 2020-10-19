@@ -134,7 +134,7 @@ class IMUSessionService : Service() {
     /**
      * Get current speed in kmh
      */
-    fun getCurrentSpeed(): Double = session.currentElement.speed * 3.6
+    fun getCurrentSpeed(): Double = session.currentElement.speed * MPS_TO_KMPH
 
     /**
      * Get current distance run in meters
@@ -248,6 +248,7 @@ class IMUSessionService : Service() {
      * @property[SAVED_ACTION] A session has been saved
      */
     companion object {
+        const val MPS_TO_KMPH = 3.6
         const val DISCONNECTED_STATE = "ai.fuzzylabs.insoleandroid.imu.DISCONNECTED_STATE"
         const val CONNECTED_STATE = "ai.fuzzylabs.insoleandroid.imu.CONNECTED_STATE"
         const val EXPORTING_STATE = "ai.fuzzylabs.insoleandroid.imu.EXPORTING_STATE"
