@@ -4,9 +4,12 @@ buildscript {
     ext.kotlin_version = '1.4.0'
     ext.dokka_version = '1.4.10'
     repositories {
+        maven {
+            url "https://dl.bintray.com/kyonifer/maven"
+        }
         google()
         jcenter()
-        
+        maven { url 'https://jitpack.io' }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.0.1'
@@ -21,9 +24,12 @@ apply plugin: "org.jetbrains.dokka"
 
 allprojects {
     repositories {
+        maven {
+            url "https://dl.bintray.com/kyonifer/maven"
+        }
         google()
         jcenter()
-        
+        maven { url 'https://jitpack.io' }
     }
 }
 

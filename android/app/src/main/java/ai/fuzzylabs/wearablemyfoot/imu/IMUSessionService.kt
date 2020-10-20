@@ -7,6 +7,8 @@ import android.os.IBinder
 import android.util.Log
 import android.util.Xml
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.*
 import java.time.Instant
 
@@ -21,6 +23,8 @@ private val TAG = IMUSessionService::class.java.simpleName
 @ExperimentalUnsignedTypes
 class IMUSessionService : Service() {
 
+    private val mutex = Mutex()
+
     inner class LocalBinder : Binder() {
         val service: IMUSessionService
             get() = this@IMUSessionService
@@ -31,6 +35,8 @@ class IMUSessionService : Service() {
     private val session = IMUSession()
     private var windowCounter = 0
     private val windowStep = 100
+    private var visualisationUpdateCounter = 0
+    private var visualisationUpdateStep = 10
     private var startTimestamp: Instant? = null
 
     override fun onBind(p0: Intent?): IBinder? {
@@ -43,27 +49,34 @@ class IMUSessionService : Service() {
     /**
      * Add reading to [IMUSession]
      *
-     * Depending on the current state -- add a raw reading to the recording, shift the current
-     * window, and/or calculate runnning metrics from the window
-     */
-    fun addReading(reading: IMUReading) {
-            if (state == CONNECTED_STATE || state == RECORDING_STATE) {
-                session.shiftWindow(reading)
 
-                if (state == RECORDING_STATE) {
-                    session.addReading(reading)
-                }
-                windowCounter++
+     * window, and/or calculate running metrics from the window
+     */
+    suspend fun addReading(reading: IMUReading) {
+        if (state == CONNECTED_STATE || state == RECORDING_STATE) {
+            mutex.withLock {
+                session.shiftWindow(reading, state == RECORDING_STATE)
             }
-            if (windowCounter >= windowStep) {
-                // CPU intensive task, launch in a coroutine
-                if(updateWindowMetricsJob?.isActive == true) {
-                    return //wait until the previous job has finished
-                }
-                updateWindowMetricsJob = GlobalScope.launch {
+            windowCounter++
+            visualisationUpdateCounter++
+        }
+        if (visualisationUpdateCounter >= visualisationUpdateStep) {
+            mutex.withLock {
+                updateVisialisation()
+            }
+        }
+
+        if (windowCounter >= windowStep) {
+            if(updateWindowMetricsJob?.isActive == true) {
+                return //wait until the previous job has finished
+            }
+            // Potentially CPU intensive task, launch in a coroutine
+            updateWindowMetricsJob = GlobalScope.launch {
+                mutex.withLock {
                     updateWindowMetrics()
                 }
             }
+        }
     }
 
     /**
@@ -116,18 +129,25 @@ class IMUSessionService : Service() {
      *
      * @return Returns the last calculated cadence estimate (or 0.0, if none is recorded)
      */
-    fun getCurrentCadence(): Double {
-        return if (session.elements.size > 0) {
-            session.currentElement.cadence
-        } else {
-            0.0
-        }
-    }
+    fun getCurrentCadence(): Double = session.currentElement.cadence
+
+    /**
+     * Get current speed in kmh
+     */
+    fun getCurrentSpeed(): Double = session.currentElement.speed * MPS_TO_KMPH
+
+    /**
+     * Get current distance run in meters
+     */
+    fun getCurrentDistance(): Double = session.currentElement.distance
 
     private fun updateWindowMetrics() {
-        session.updateWindowMetrics(state == RECORDING_STATE)
+        session.updateWindowMetrics(windowCounter, state == RECORDING_STATE)
 
         val intent = Intent(METRICS_UPDATED_ACTION)
+        intent.putExtra(CADENCE_DOUBLE, getCurrentCadence())
+        intent.putExtra(SPEED_DOUBLE, getCurrentSpeed())
+        intent.putExtra(DISTANCE_DOUBLE, getCurrentDistance())
         sendBroadcast(intent)
 
         windowCounter = 0
@@ -142,7 +162,7 @@ class IMUSessionService : Service() {
         try {
             val os: OutputStream = FileOutputStream(file)
             os.writer().use {
-                it.write("time,aX,aY,aZ,gX,gY,gZ\n")
+                it.write("time,aX,aY,aZ,gX,gY,gZ,pc0,pc1,pc2\n")
                 session.readings.forEach { reading -> it.write(reading.toCSVRow()) }
             }
             os.close()
@@ -160,7 +180,7 @@ class IMUSessionService : Service() {
         val path: File? = applicationContext.getExternalFilesDir(null)
         val file = File(path, filename)
 
-        startTimestamp?.let { session.recalculateElements(it) }
+//        startTimestamp?.let { session.recalculateElements(it) }
         val elements = session.elements
 
         val gpx = Xml.newSerializer()
@@ -202,6 +222,13 @@ class IMUSessionService : Service() {
         Log.d(TAG, file.toString())
     }
 
+    private fun updateVisialisation() {
+        val intent = Intent(VISUALISATION_UPDATED_ACTION)
+        intent.putExtra(VISUALISATION_BYTEARRAY, getBytes())
+        sendBroadcast(intent)
+        visualisationUpdateCounter = 0
+    }
+
     /**
      * Get bytes for visualisation
      *
@@ -217,14 +244,23 @@ class IMUSessionService : Service() {
      * @property[EXPORTING_STATE] The current session is being exported
      * @property[RECORDING_STATE] The current session is being recorded
      * @property[METRICS_UPDATED_ACTION] Metrics update is available
+     * @property[VISUALISATION_UPDATED_ACTION] ByteArray for visualisation is updated
      * @property[SAVED_ACTION] A session has been saved
      */
     companion object {
+        const val MPS_TO_KMPH = 3.6
         const val DISCONNECTED_STATE = "ai.fuzzylabs.insoleandroid.imu.DISCONNECTED_STATE"
         const val CONNECTED_STATE = "ai.fuzzylabs.insoleandroid.imu.CONNECTED_STATE"
         const val EXPORTING_STATE = "ai.fuzzylabs.insoleandroid.imu.EXPORTING_STATE"
         const val RECORDING_STATE = "ai.fuzzylabs.insoleandroid.imu.RECORDING_STATE"
         const val METRICS_UPDATED_ACTION = "ai.fuzzylabs.insoleandroud.imu.METRICS_UPDATED_ACTION"
+        const val VISUALISATION_UPDATED_ACTION = "ai.fuzzylabs.insoleandroid.imu.VISUALISATION_UPDATED_ACTION"
         const val SAVED_ACTION = "ai.fuzzylabs.insoleandroud.imu.SAVED_ACTION"
+        const val VISUALISATION_BYTEARRAY = "ai.fuzzylabs.insoleandroud.imu.VISUALISATION_BYTEARRAY"
+        const val DEBUG_ACTION = "ai.fuzzylabs.insoleandroud.imu.DEBUG_ACTION"
+        const val DEBUG_STRING = "ai.fuzzylabs.insoleandroud.imu.DEBUG_STRING"
+        const val CADENCE_DOUBLE = "ai.fuzzylabs.insoleandroud.imu.CADENCE_DOUBLE"
+        const val SPEED_DOUBLE = "ai.fuzzylabs.insoleandroud.imu.SPEED_DOUBLE"
+        const val DISTANCE_DOUBLE = "ai.fuzzylabs.insoleandroud.imu.DISTANCE_DOUBLE"
     }
 }

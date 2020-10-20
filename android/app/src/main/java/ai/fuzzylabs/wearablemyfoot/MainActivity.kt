@@ -5,7 +5,7 @@ import ai.fuzzylabs.wearablemyfoot.imu.IMUSessionService
 import android.content.*
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
+import kotlinx.coroutines.launch
 import android.os.IBinder
 import android.util.Log
 import android.view.View
@@ -16,6 +16,8 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.gauravk.audiovisualizer.visualizer.HiFiVisualizer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 
 private val TAG = MainActivity::class.java.simpleName
@@ -31,6 +33,9 @@ class MainActivity : AppCompatActivity() {
     private var state: String = STATE_CONNECTED
 
     private val cadenceTextView: TextView by lazy { findViewById(R.id.cadenceTextView) }
+    private val speedTextView: TextView by lazy { findViewById(R.id.speedTextView) }
+    private val distanceTextView: TextView by lazy { findViewById(R.id.distanceTextView) }
+
     private val recordButton: Button by lazy { findViewById(R.id.recordButton) }
     private val stopButton: Button by lazy { findViewById(R.id.stopButton) }
     private val continueButton: Button by lazy { findViewById(R.id.continueButton) }
@@ -45,6 +50,8 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, "IMUSessionService Connected")
             sessionService = (binder as IMUSessionService.LocalBinder).service
             cadenceTextView.text = getString(R.string.value_cadence, sessionService?.getCurrentCadence())
+            speedTextView.text = getString(R.string.value_speed, sessionService?.getCurrentSpeed())
+            distanceTextView.text = getString(R.string.value_distance, sessionService?.getCurrentDistance())
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
@@ -88,6 +95,8 @@ class MainActivity : AppCompatActivity() {
         val sessionBroadcastFilter = IntentFilter()
         sessionBroadcastFilter.addAction(IMUSessionService.METRICS_UPDATED_ACTION)
         sessionBroadcastFilter.addAction(IMUSessionService.SAVED_ACTION)
+        sessionBroadcastFilter.addAction(IMUSessionService.VISUALISATION_UPDATED_ACTION)
+        sessionBroadcastFilter.addAction(IMUSessionService.DEBUG_ACTION)
         registerReceiver(imuSessionUpdateReceiver, sessionBroadcastFilter)
 
         val sessionServiceIntent = Intent(this, IMUSessionService::class.java)
@@ -99,16 +108,6 @@ class MainActivity : AppCompatActivity() {
         Log.d("Session Binding", sessionBound.toString())
 
         updateView()
-
-        val handler = Handler()
-        val testVis = object: Runnable {
-            override fun run() {
-                val ba = sessionService?.getBytes()
-                visualiser.setRawAudioBytes(ba)
-                handler.postDelayed(this, 100)
-            }
-        }
-        handler.post(testVis)
     }
 
     override fun onDestroy() {
@@ -120,14 +119,28 @@ class MainActivity : AppCompatActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 IMUSessionService.METRICS_UPDATED_ACTION -> {
-                    val cadence = sessionService?.getCurrentCadence()
-                    Log.d(TAG, "Cadence: $cadence")
+                    val cadence = intent.getDoubleExtra(IMUSessionService.CADENCE_DOUBLE, 0.0)
+                    val speed = intent.getDoubleExtra(IMUSessionService.SPEED_DOUBLE, 0.0)
+                    val distance = intent.getDoubleExtra(IMUSessionService.DISTANCE_DOUBLE, 0.0)
                     cadenceTextView.text = getString(R.string.value_cadence, cadence)
+                    speedTextView.text = getString(R.string.value_speed, speed)
+                    distanceTextView.text = getString(R.string.value_distance, distance)
                 }
                 IMUSessionService.SAVED_ACTION -> {
                     state = STATE_CONNECTED
                     Toast.makeText(applicationContext, getString(R.string.saved_message), Toast.LENGTH_SHORT).show()
                     updateView()
+                }
+                IMUSessionService.VISUALISATION_UPDATED_ACTION -> {
+                    val bytes = intent.getByteArrayExtra(IMUSessionService.VISUALISATION_BYTEARRAY)
+                    if(bytes != null) {
+                        if(bytes.size < 1000){
+                            val paddedBytes = byteArrayOf(*ByteArray(1000 - bytes.size) {127}, *bytes)
+                            visualiser.setRawAudioBytes(paddedBytes)
+                        } else {
+                            visualiser.setRawAudioBytes(bytes)
+                        }
+                    }
                 }
             }
         }
@@ -155,7 +168,11 @@ class MainActivity : AppCompatActivity() {
                     val imuReading =
                         IMUReading.fromByteArray(intent.getByteArrayExtra("IMU_BYTEARRAY"))
                     if (imuReading != null) {
-                        sessionService?.addReading(imuReading)
+                        runBlocking {
+                            launch(Dispatchers.Default) {
+                                sessionService?.addReading(imuReading)
+                            }
+                        }
                     }
                 }
             }

@@ -18,6 +18,7 @@ android/captures
 android/gradle
 android/gradlew
 android/gradlew.bat
+android/app/release
 
 # Python
 **/env

@@ -1,5 +1,6 @@
 package ai.fuzzylabs.wearablemyfoot.imu
 
+import ai.fuzzylabs.wearablemyfoot.util.DoubleVector3D
 import java.nio.ByteBuffer
 
 const val G = 9.8;
@@ -20,15 +21,13 @@ const val G = 9.8;
 @ExperimentalUnsignedTypes
 class IMUReading constructor(
     private val time: UInt, // Arduino sends unsigned long, which is 32 bit
-    private val aX: Float,
-    private val aY: Float,
-    private val aZ: Float,
-    private val gX: Float,
-    private val gY: Float,
-    private val gZ: Float
+    private val acceleration: DoubleVector3D,
+    private val angularVelocity: DoubleVector3D
 ) {
+    var pc = DoubleVector3D.zero()
+
     override fun toString(): String {
-        return "${time}\n${aX}\n${aY}\n${aZ}\n${gX}\n${gY}\n${gZ}"
+        return "${time}\n$acceleration\n$angularVelocity\n"
     }
 
     /**
@@ -37,7 +36,28 @@ class IMUReading constructor(
      * @return String to be used on CSV export
      */
     fun toCSVRow(): String {
-        return "${time},${aX},${aY},${aZ},${gX},${gY},${gZ}\n"
+        return "${time},${acceleration.toCSVRow()},${angularVelocity.toCSVRow()},${pc.toCSVRow()}\n"
+    }
+
+    /**
+     * @return Time of the reading in ms from the start of the Arduino device
+     */
+    fun getTime(): UInt {
+        return time;
+    }
+
+    /**
+     * Get acceleration vector (in m/s^2)
+     *
+     * @return DoubleArray of acceleration in m/s^2 (+X, +Y, +Z)
+     */
+    fun getAcceleration(): DoubleArray = acceleration.toTypedArray().map { it * G }.toDoubleArray()
+
+    /**
+     * Get 0th PC of acceleration (in m/s^2)
+     */
+    fun getPC0(): Double {
+        return pc.x
     }
 
     companion object {
@@ -54,35 +74,15 @@ class IMUReading constructor(
                 val gZ = buffer.getFloat(0)
                 return IMUReading(
                     time.toUInt(),
-                    aX,
-                    aY,
-                    aZ,
-                    gX,
-                    gY,
-                    gZ
+                    DoubleVector3D(aX.toDouble(), aY.toDouble(), aZ.toDouble()),
+                    DoubleVector3D(gX.toDouble(), gY.toDouble(), gZ.toDouble())
                 )
             }
             return null
         }
 
         fun zero(): IMUReading {
-            return IMUReading(0u,0F,0F,0F,0F,0F,0F)
+            return IMUReading(0u, DoubleVector3D.zero(), DoubleVector3D.zero())
         }
-    }
-
-    /**
-     * @return Time of the reading in ms from the start of the Arduino device
-     */
-    fun getTime(): UInt {
-        return time;
-    }
-
-    /**
-     * Get acceleration vector (in m/s^2)
-     *
-     * @return DoubleArray of acceleration in m/s^2 (+X, +Y, +Z)
-     */
-    fun getAcceleration(): DoubleArray {
-        return doubleArrayOf(aX.toDouble() * G, aY.toDouble() * G, aZ.toDouble() * G)
     }
 }

@@ -179,7 +179,6 @@ class BluetoothLeService : Service() {
             gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic?
         ) {
-            Log.d(TAG, "Characteristic changed")
             if (characteristic != null) {
                 broadcastUpdate(Companion.ACTION_DATA_AVAILABLE, characteristic)
             }

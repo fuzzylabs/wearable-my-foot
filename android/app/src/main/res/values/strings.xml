@@ -13,9 +13,13 @@
 <!--    Main screen-->
     <string name="label_power">Power:</string>
     <string name="label_cadence">Cadence:</string>
+    <string name="label_speed">Speed:</string>
+    <string name="label_distance">Distance:</string>
     <string name="label_ground_time">Ground time:</string>
     <string name="value_power">%.2f W</string>
     <string name="value_cadence">%.2f spm</string>
+    <string name="value_speed">%.2f kmh</string>
+    <string name="value_distance">%.2f m</string>
     <string name="value_ground_time">%.2f ms</string>
     <string name="not_implemented_placeholder">Not implemented</string>
     <string name="record_button">Record</string>
