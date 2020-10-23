@@ -24,3 +24,6 @@ android/app/release
 **/env
 **/.ipynb_checkpoints
 **/__pycache__
+
+# MacOS
+.DS_Store
