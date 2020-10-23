@@ -23,3 +23,6 @@ android/gradlew.bat
 **/env
 **/.ipynb_checkpoints
 **/__pycache__
+
+# MacOS
+.DS_Store

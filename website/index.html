@@ -21,7 +21,7 @@
     
     pre {
       font: 11.0px 'SourceCodePro Italic';
-      width: 585px;
+      width: 800px;
       position: relative;
       white-space: -moz-pre-wrap; /* Mozilla, supported since 1999 */
       white-space: -pre-wrap; /* Opera */
@@ -54,9 +54,9 @@
 -----------------------------------------
 -----------------------------------------
                                 
-          AN OPEN SOURCE IoT ARDUINO PROJECT
+          AN OPEN SOURCE RUNNING POWER METER
 
-          PUT YOUR SHOES ON THE INTERNET
+                    <a href="https://github.com/fuzzylabs/wearable-my-foot">CODE</a>
 
                   _    _
                  (_\__/(,_
@@ -68,25 +68,67 @@
     |=====;__/___./
     '-'-'-"""""""`      Powered by: <a href="https://fuzzylabs.ai">Fuzzy Labs</a>
 
-                
+
+                        **********************
+
+
+PROJECT AIMS:
+
+Achieve a state of the art running power metric that rivals <a href="https://stryd.com">Stryd</a>, but with a difference.
+
+  ~ Open Source.
+  ~ Uses off the shelf hardware (Arduino).
+  ~ Inexpensive to build.
+  ~ Full transparency of how data is collected and calculated.
+  ~ Encourage collaboration for the project from the community.
+    + Submit bug reports.
+    + Make a feature request.
+    + Even better, open a pull request!
+  ~ Have fun!
+
+
+                        **********************
+
 WHY:
 
-  Are you interested in monitoring your gait and posture?
-  Do you have recurring injuries that are hard to diagnose?
-  Do you want some more insight into what your feet are doing?
-  Have you always wanted to duct tape electrical components to your trainers?
+  Power based training is very useful for measuring a consistent effort and improving your fitness.
+
+  Power meters for cycling have been around for a while and it is relatively easy to conceive what they do - by measuring the force applied to a bicyle crank (using a strain gauge) and the speed that it moves then we can derive power (Power = Force x Velocity). There are many commercial offerings for cycling power meters or you can <a href="https://sensitivus.com/products/diy-power-meter/">build your own if you want</a>.
+
+  Running power is a different kettle of fish though, there's a lot going on so what exactly are we measuring? Things we might need to take into account include:
+
+    ~ Velocity
+    ~ Whether we're going up or down a hill
+    ~ How firm (or soft) the ground is
+    ~ The weight of the runner
+    ~ Steps per minute (cadence)
+    ~ How high we raise our feet (vertical oscillation)
+    ~ Stiffness of muscles and tendons in the leg (Leg Spring Stiffness (LSS)).
+
+  There are a few commercial running power meters, each of which have their own algorithm and approach to measuring running power. Understandably, for a commercial product protecting its intellectual property, the exact algorithm isn't disclosed.
+
+  Commercial Products:
+    ~ <a href="https://stryd.com">Stryd</a> - arguably the <a href="https://www.outsideonline.com/2413011/running-power-meter-comparison-study">current state of the art</a>.
+    ~ Garmin - when paired with their <a href="(https://buy.garmin.com/en-GB/GB/p/561205">foot pod</a>.
+    ~ Polar - uses <a href="https://www.polar.com/uk-en/smart-coaching/running-power">smart watch only</a>.
+    ~ Runscribe - <a href="https://runscribe.com/power/">some details of how they calculate power</a>.
+
+
+  Werable <a href="https://en.wiktionary.org/wiki/my_foot">My Foot</a> aims to be the first Open Source Running Power Meter. The hardware design and software is freely available for anybody to use.
+
+
+                        **********************
 
   
 HOW:
 
-  Build your own wearable IoT device for your shoes. Wearable <a href="https://en.wiktionary.org/wiki/my_foot">my foot</a> is an
-  open source project that shows you how you can do it with readily available hardware.
-
   * Buy the bits - we provide a shopping list of what you need.
   * Put the bits together - following our instructions.
-  * Attach it to your shoe(s) - using gratuitous amounts of duct tape.
-  * Go for a walk / jog / <a href="https://www.youtube.com/watch?v=NGggrr89VnA">disco shuffle</a> - collect some data.
-  * Deploy the software to visualise the data and see what your feet are really up to. 
+  * Attach it to your shoe - using gratuitous amounts of gorilla tape and cable ties.
+  * Download and install our Android Mobile App.
+  * Pair the App with the device and start recording.
+  * Go for a run and save the data.
+  * Export to GPX or CSV.
 
 
 WHAT:
