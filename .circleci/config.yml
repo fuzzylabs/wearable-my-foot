@@ -12,6 +12,7 @@ jobs:
           name: Deploy to Firebase
           command: |
             pushd website
+            mkdir firebase-deploy
             npm install --prefix=./firebase-deploy firebase-tools
             ./firebase-deploy/node_modules/.bin/firebase deploy --token=$FIREBASE_TOKEN --project $GOOGLE_PROJECT_ID
             popd
