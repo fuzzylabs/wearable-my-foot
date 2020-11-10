@@ -8,7 +8,7 @@ package ai.fuzzylabs.wearablemyfoot.util
  * @param[z] Z, or the third component
  */
 data class DoubleVector3D(val x: Double, val y: Double, val z: Double) {
-    fun toCSVRow(): String = "$x.$y.$z"
+    fun toCSVRow(): String = "$x,$y,$z"
 
     fun toTypedArray(): DoubleArray = doubleArrayOf(x, y, z)
 
